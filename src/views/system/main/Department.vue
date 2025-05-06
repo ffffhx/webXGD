@@ -1,43 +1,40 @@
 <template>
-  <BasePage>
-    <div>
-      <!-- 新增部门按钮 -->
-      <el-button type="primary" @click="openDialog('add')">新增部门</el-button>
+  <div>
+    <!-- 新增部门按钮 -->
+    <el-button type="primary" plain @click="openDialog('add')">新增部门</el-button>
 
-      <!-- 部门表格 -->
-      <el-table :data="tableData" border style="width: 100%; margin-top: 20px;">
-        <el-table-column type="index" label="序号" width="60" />
-        <el-table-column prop="name" label="部门名称" />
-        <el-table-column prop="updateTime" label="最后操作时间" />
-        <el-table-column label="操作" fixed="right" width="180">
-          <template #default="scope">
-            <el-button size="small" type="primary" text @click="openDialog('edit', scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" text @click="onDelete(scope.row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <!-- 新增/编辑弹窗 -->
-      <el-dialog v-model="dialogVisible" :title="dialogTitle" width="400px">
-        <el-form :model="dialogForm" label-width="100px">
-          <el-form-item label="部门名称" required>
-            <el-input v-model="dialogForm.name" />
-          </el-form-item>
-        </el-form>
-        <template #footer>
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleDialogSubmit">确认</el-button>
+    <!-- 部门表格 -->
+    <el-table :data="tableData" border style="width: 100%; margin-top: 20px;">
+      <el-table-column type="index" label="序号" width="60" />
+      <el-table-column prop="name" label="部门名称" />
+      <el-table-column prop="updateTime" label="最后操作时间" />
+      <el-table-column label="操作" fixed="right" width="180">
+        <template #default="scope">
+          <el-button size="small" type="primary" text @click="openDialog('edit', scope.row)">编辑</el-button>
+          <el-button size="small" type="danger" text @click="onDelete(scope.row)">删除</el-button>
         </template>
-      </el-dialog>
-    </div>
-  </BasePage>
+      </el-table-column>
+    </el-table>
 
+    <!-- 新增/编辑弹窗 -->
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="400px">
+      <el-form :model="dialogForm" label-width="100px">
+        <el-form-item label="部门名称" required>
+          <el-input v-model="dialogForm.name" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleDialogSubmit">确认</el-button>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script lang="ts" setup>
 import { reactive, ref, onMounted } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import BasePage from '@/components/layout/BasePage.vue'
+import Swal from 'sweetalert2'
 
 // 表格数据结构
 interface Department {
@@ -98,18 +95,31 @@ const handleDialogSubmit = () => {
 
 // 删除操作
 const onDelete = (row: Department) => {
-  ElMessageBox.confirm(`确定删除部门「${row.name}」吗？`, '提示', {
+  Swal.fire({
+    title: `确定删除部门「${row.name}」吗？`,
+    text: "删除后将无法恢复！",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
     confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  })
-    .then(() => {
+    cancelButtonText: '取消'
+  }).then((result) => {
+    if (result.isConfirmed) {
       tableData.value = tableData.value.filter(item => item !== row)
-      ElMessage.success('删除成功')
-    })
-    .catch(() => {
-      ElMessage.info('已取消删除')
-    })
+      Swal.fire(
+        '删除成功！',
+        `部门「${row.name}」已被删除。`,
+        'success'
+      )
+    } else {
+      Swal.fire(
+        '已取消',
+        '部门未被删除。',
+        'info'
+      )
+    }
+  })
 }
 
 onMounted(fetchData)

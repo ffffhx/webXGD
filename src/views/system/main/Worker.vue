@@ -1,100 +1,99 @@
 <template>
-  <BasePage> <!-- 查询条件 -->
-    <el-form :model="form" inline>
-      <el-form-item label="姓名">
-        <el-input v-model="form.name" placeholder="请输入姓名" />
+  <!-- 查询条件 -->
+  <el-form :model="form" inline>
+    <el-form-item label="姓名">
+      <el-input v-model="form.name" placeholder="请输入姓名" />
+    </el-form-item>
+    <el-form-item label="性别">
+      <el-select v-model="form.gender" placeholder="请选择">
+        <el-option label="男" value="男" />
+        <el-option label="女" value="女" />
+      </el-select>
+    </el-form-item>
+    <el-form-item label="入职时间">
+      <el-date-picker v-model="form.entryDate" type="daterange" range-separator="至" start-placeholder="开始日期"
+        end-placeholder="结束日期" />
+    </el-form-item>
+    <el-form-item>
+      <el-button type="primary" @click="onSearch">查询</el-button>
+    </el-form-item>
+  </el-form>
+
+  <!-- 操作按钮 -->
+  <div style="margin-bottom: 10px;">
+    <el-button type="primary" plain @click="openDialog('add')">新增员工</el-button>
+    <el-button type="danger" :disabled="!multipleSelection.length" plain @click="batchDelete">批量删除</el-button>
+  </div>
+
+  <!-- 表格 -->
+  <el-table :data="tableData" border style="width: 100%" @selection-change="handleSelectionChange">
+    <el-table-column type="selection" width="55" />
+    <el-table-column type="index" label="序号" width="60" />
+    <el-table-column prop="name" label="姓名" />
+    <el-table-column label="图像" width="100">
+      <template #default="{ row }">
+        <el-image :src="row.avatar" style="width: 60px; height: 60px" v-if="row.avatar" />
+        <span v-else>无</span>
+      </template>
+    </el-table-column>
+    <el-table-column prop="gender" label="性别" />
+    <el-table-column prop="position" label="职位" />
+    <el-table-column prop="entryDate" label="入职日期" />
+    <el-table-column prop="lastOperate" label="最后操作时间" />
+    <el-table-column label="操作" width="180">
+      <template #default="{ row }">
+        <el-button type="primary" size="small" @click="openDialog('edit', row)">编辑</el-button>
+        <el-button type="danger" size="small" @click="onDelete(row)">删除</el-button>
+      </template>
+    </el-table-column>
+  </el-table>
+
+  <!-- 新增/编辑员工弹窗 -->
+  <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
+    <el-form :model="dialogForm" label-width="100px" :rules="rules" ref="formRef">
+      <el-form-item label="用户名" prop="username">
+        <el-input v-model="dialogForm.username" />
       </el-form-item>
-      <el-form-item label="性别" style="width: 150px;">
-        <el-select v-model="form.gender" placeholder="请选择">
+      <el-form-item label="姓名" prop="name">
+        <el-input v-model="dialogForm.name" />
+      </el-form-item>
+      <el-form-item label="性别" prop="gender">
+        <el-select v-model="dialogForm.gender" placeholder="请选择">
           <el-option label="男" value="男" />
           <el-option label="女" value="女" />
         </el-select>
       </el-form-item>
-      <el-form-item label="入职时间">
-        <el-date-picker v-model="form.entryDate" type="daterange" range-separator="至" start-placeholder="开始日期"
-          end-placeholder="结束日期" />
+      <el-form-item label="图像">
+        <el-upload class="avatar-uploader" :action="uploadUrl" :show-file-list="false" :on-success="handleAvatarSuccess"
+          :before-upload="beforeAvatarUpload">
+          <img v-if="dialogForm.avatar" :src="dialogForm.avatar" class="avatar" />
+          <el-icon v-else>
+            <Plus />
+          </el-icon>
+        </el-upload>
       </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="onSearch">查询</el-button>
+      <el-form-item label="职位">
+        <el-input v-model="dialogForm.position" />
+      </el-form-item>
+      <el-form-item label="入职日期">
+        <el-date-picker v-model="dialogForm.entryDate" type="date" />
+      </el-form-item>
+      <el-form-item label="归属部门">
+        <el-input v-model="dialogForm.department" />
       </el-form-item>
     </el-form>
-
-    <!-- 操作按钮 -->
-    <div style="margin-bottom: 10px;">
-      <el-button type="primary" plain @click="openDialog('add')">新增员工</el-button>
-      <el-button type="danger" :disabled="!multipleSelection.length" @click="batchDelete">批量删除</el-button>
-    </div>
-
-    <!-- 表格 -->
-    <el-table :data="tableData" border style="width: 100%" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" />
-      <el-table-column type="index" label="序号" width="60" />
-      <el-table-column prop="name" label="姓名" />
-      <el-table-column label="图像" width="100">
-        <template #default="{ row }">
-          <el-image :src="row.avatar" style="width: 60px; height: 60px" v-if="row.avatar" />
-          <span v-else>无</span>
-        </template>
-      </el-table-column>
-      <el-table-column prop="gender" label="性别" />
-      <el-table-column prop="position" label="职位" />
-      <el-table-column prop="entryDate" label="入职日期" />
-      <el-table-column prop="lastOperate" label="最后操作时间" />
-      <el-table-column label="操作" width="180">
-        <template #default="{ row }">
-          <el-button type="primary" size="small" @click="openDialog('edit', row)">编辑</el-button>
-          <el-button type="danger" size="small" @click="onDelete(row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 新增/编辑员工弹窗 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
-      <el-form :model="dialogForm" label-width="100px" :rules="rules" ref="formRef">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="dialogForm.username" />
-        </el-form-item>
-        <el-form-item label="姓名" prop="name">
-          <el-input v-model="dialogForm.name" />
-        </el-form-item>
-        <el-form-item label="性别" prop="gender">
-          <el-select v-model="dialogForm.gender" placeholder="请选择">
-            <el-option label="男" value="男" />
-            <el-option label="女" value="女" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="图像">
-          <el-upload class="avatar-uploader" :action="uploadUrl" :show-file-list="false"
-            :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload">
-            <img v-if="dialogForm.avatar" :src="dialogForm.avatar" class="avatar" />
-            <el-icon v-else>
-              <Plus />
-            </el-icon>
-          </el-upload>
-        </el-form-item>
-        <el-form-item label="职位">
-          <el-input v-model="dialogForm.position" />
-        </el-form-item>
-        <el-form-item label="入职日期">
-          <el-date-picker v-model="dialogForm.entryDate" type="date" />
-        </el-form-item>
-        <el-form-item label="归属部门">
-          <el-input v-model="dialogForm.department" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确认</el-button>
-      </template>
-    </el-dialog>
-  </BasePage>
+    <template #footer>
+      <el-button @click="dialogVisible = false">取消</el-button>
+      <el-button type="primary" @click="handleSubmit">确认</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { UploadProps } from 'element-plus'
-import BasePage from '@/components/layout/BasePage.vue'
+import Swal from 'sweetalert2'
 
 const form = reactive({
   name: '',
@@ -180,13 +179,30 @@ const handleSubmit = () => {
 }
 
 const onDelete = (row: any) => {
-  ElMessageBox.confirm(`确认删除员工 ${row.name} 吗？`, '提示', {
+  Swal.fire({
+    title: `确认删除员工「${row.name}」吗？`,
+    text: "删除后将无法恢复！",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
     confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    tableData.value = tableData.value.filter(item => item !== row)
-    ElMessage.success('删除成功')
+    cancelButtonText: '取消'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      tableData.value = tableData.value.filter(item => item !== row)
+      Swal.fire(
+        '删除成功！',
+        `员工「${row.name}」已被删除。`,
+        'success'
+      )
+    } else {
+      Swal.fire(
+        '已取消',
+        '员工未被删除。',
+        'info'
+      )
+    }
   })
 }
 
