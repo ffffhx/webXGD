@@ -109,7 +109,7 @@ const fetchData = () => {
   request.get('/emps', {
     params: {
       page: 1,
-      pageSize: 10
+      pageSize: 20
     }
   }).then((res) => {
     console.log(res, 'res');
