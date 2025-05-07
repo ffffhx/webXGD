@@ -170,21 +170,15 @@ const openDialog = (type: 'add' | 'edit', row?: any) => {
   }
   // 新增员工
   else {
-
-    // request.post('/emps', {
-    //   username: dialogForm.username,
-    //   name: dialogForm.name,
-    //   gender: dialogForm.gender
-    // })
-    // Object.assign(dialogForm, {
-    //   username: '',
-    //   name: '',
-    //   gender: '',
-    //   avatar: '',
-    //   position: '',
-    //   entryDate: '',
-    //   department: ''
-    // })
+    Object.assign(dialogForm, {
+      username: '',
+      name: '',
+      gender: '',
+      avatar: '',
+      position: '',
+      entryDate: '',
+      department: ''
+    })
   }
   dialogVisible.value = true
 }
@@ -198,19 +192,25 @@ const handleSubmit = () => {
           username: dialogForm.username,
           name: dialogForm.name,
           gender: dialogForm.gender === '男' ? 1 : 2
+        }).then((res) => {
+          fetchData()
+
         })
+
       } else {
+        // 修改员工
         request.put('/emps', {
           id: dialogForm.id,
           username: dialogForm.username,
           name: dialogForm.name,
           gender: dialogForm.gender === '男' ? 1 : 2
+        }).then((res) => {
+          fetchData()
+
         })
         // const idx = tableData.value.findIndex(item => item.username === dialogForm.username)
         // if (idx !== -1) tableData.value[idx] = { ...dialogForm, lastOperate: new Date().toLocaleString() }
       }
-      fetchData()
-
       dialogVisible.value = false
       ElMessage.success('提交成功')
     }

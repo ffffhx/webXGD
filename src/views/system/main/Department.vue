@@ -113,6 +113,7 @@ const handleDialogSubmit = () => {
       name: dialogForm.name
     }).then((res) => {
       console.log(res, 'res');
+      fetchData()
 
     })
   }
@@ -134,8 +135,10 @@ const onDelete = (row: Department) => {
 
       request.delete(`/depts/${row.id}`).then((res) => {
         console.log(res);
+        ElMessage.success('删除成功')
+        fetchData()
+
       })
-      ElMessage.success('删除成功')
     })
     .catch(() => {
       ElMessage.info('已取消删除')
