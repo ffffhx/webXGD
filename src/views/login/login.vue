@@ -32,13 +32,13 @@ const form = reactive({
 import { ElMessage } from 'element-plus'
 import request from '@/utils/request.ts'
 
-const handleLogin = async () => {
+const handleLogin = () => {
   if (!form.username || !form.password) {
     ElMessage.error('请输入用户名和密码')
     return
   }
 
-  await request.post('/login', {
+  request.post('/login', {
     username: form.username,
     password: form.password
   }).then((res) => {
@@ -48,6 +48,9 @@ const handleLogin = async () => {
       console.log('登录成功');
       router.push('class')
     }
+  }).catch(err => {
+    console.log(err, 'err');
+
   })
 
 }

@@ -94,6 +94,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { UploadProps } from 'element-plus'
 import request from '@/utils/request'
+import { id } from 'element-plus/es/locales.mjs'
 
 const form = reactive({
   name: '',
@@ -135,7 +136,15 @@ const batchDelete = () => {
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
-    tableData.value = tableData.value.filter(item => !multipleSelection.value.includes(item))
+
+    // tableData.value = tableData.value.filter(item => !multipleSelection.value.includes(item))
+    const filtered = multipleSelection.value.map((item) => {
+      return item.id
+    })
+
+    request.delete(`emps/${filtered}`).then((res) => {
+      fetchData()
+    })
     ElMessage.success('删除成功')
   })
 }

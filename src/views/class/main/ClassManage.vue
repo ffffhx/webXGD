@@ -24,11 +24,11 @@
 
     <el-table :data="tableData" border style="width: 100%">
       <el-table-column type="index" :index="1" />
-      <el-table-column prop="classname" label="班级名称" width="180" />
-      <el-table-column prop="classroom" label="班级教室" width="180" />
-      <el-table-column prop="starttime" label="开课时间" />
-      <el-table-column prop="endtime" label="结课时间" />
-      <el-table-column prop="teacher" label="班主任" />
+      <el-table-column prop="name" label="班级名称" width="180" />
+      <el-table-column prop="classRoom" label="班级教室" width="180" />
+      <el-table-column prop="startTime" label="开课时间" />
+      <el-table-column prop="endTime" label="结课时间" />
+      <el-table-column prop="classLeader" label="班主任" />
       <el-table-column label="操作" fixed="right" width="250">
         <template #default="scope">
           <el-button size="small" type="primary" text @click="openDialog('edit', scope.row)">编辑</el-button>
@@ -48,19 +48,19 @@
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
       <el-form :model="dialogForm" label-width="100px">
         <el-form-item label="班级名称">
-          <el-input v-model="dialogForm.classname" />
+          <el-input v-model="dialogForm.name" />
         </el-form-item>
         <el-form-item label="班级教室">
-          <el-input v-model="dialogForm.classroom" />
+          <el-input v-model="dialogForm.classRoom" />
         </el-form-item>
         <el-form-item label="开课时间">
-          <el-date-picker v-model="dialogForm.starttime" type="date" placeholder="开课时间" style="width: 100%" />
+          <el-date-picker v-model="dialogForm.startTime" type="date" placeholder="开课时间" style="width: 100%" />
         </el-form-item>
         <el-form-item label="结课时间">
-          <el-date-picker v-model="dialogForm.endtime" type="date" placeholder="结课时间" style="width: 100%" />
+          <el-date-picker v-model="dialogForm.endTime" type="date" placeholder="结课时间" style="width: 100%" />
         </el-form-item>
         <el-form-item label="班主任">
-          <el-input v-model="dialogForm.teacher" />
+          <el-input v-model="dialogForm.classLeader" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -78,11 +78,12 @@ import BasePage from '@/components/layout/BasePage.vue'
 import request from '@/utils/request'
 
 interface TableData {
-  classname: string
-  classroom: string
-  starttime: string
-  endtime: string
-  teacher: string
+  id?: number
+  name: string
+  classRoom: string
+  startTime: string
+  endTime: string
+  classLeader: string
 }
 
 const form = reactive({
@@ -101,15 +102,24 @@ const onSubmit = () => {
 }
 
 const fetchData = async () => {
-  request.get
-  tableData.value = Array.from({ length: pageSize.value }, (_, i) => ({
-    classname: '生物',
-    classroom: `高三${i + 1}班`,
-    starttime: '2024-09-01',
-    endtime: '2025-01-01',
-    teacher: '徐华松'
-  }))
-  total.value = 100
+  request.post('/class/list', {
+    page: 1,
+    pageSize: 10,
+  }).then((res) => {
+    console.log(res, 'res');
+    tableData.value = res.data.rows
+  }).catch((err) => {
+    console.log(err, 'err');
+
+  })
+  // tableData.value = Array.from({ length: pageSize.value }, (_, i) => ({
+  //   name: '生物',
+  //   classRoom: `高三${i + 1}班`,
+  //   startTime: '2024-09-01',
+  //   endTime: '2025-01-01',
+  //   classLeader: '徐华松'
+  // }))
+  // total.value = 100
 }
 
 const handlePageChange = (val: number) => {
@@ -131,11 +141,11 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('')
 
 const dialogForm = reactive<TableData>({
-  classname: '',
-  classroom: '',
-  starttime: '',
-  endtime: '',
-  teacher: ''
+  name: '',
+  classRoom: '',
+  startTime: '',
+  endTime: '',
+  classLeader: ''
 })
 
 const openDialog = (type: 'add' | 'edit', row?: TableData) => {
@@ -144,32 +154,58 @@ const openDialog = (type: 'add' | 'edit', row?: TableData) => {
     Object.assign(dialogForm, row)
   } else {
     Object.assign(dialogForm, {
-      classname: '',
-      classroom: '',
-      starttime: '',
-      endtime: '',
-      teacher: ''
+      name: '',
+      classRoom: '',
+      startTime: '',
+      endTime: '',
+      classLeader: ''
     })
   }
   dialogVisible.value = true
 }
 
 const handleDialogSubmit = () => {
+  // 新增
   if (dialogTitle.value === '新增班级') {
-    tableData.value.unshift({ ...dialogForm })
+    // tableData.value.unshift({ ...dialogForm })
+    request.post('class/add', {
+      name: dialogForm.name,
+      classRoom: dialogForm.classRoom,
+      startTime: dialogForm.startTime,
+      endTime: dialogForm.endTime,
+      classLeader: dialogForm.classLeader
+    }).then(res => {
+      console.log(res);
+      fetchData()
+    }).catch(err => {
+      console.log(err);
+
+    });
+
   } else {
-    // 模拟更新逻辑
-    const index = tableData.value.findIndex(item => item.classname === dialogForm.classname)
-    if (index !== -1) {
-      tableData.value[index] = { ...dialogForm }
-    }
+    // 修改
+    request.put('class', {
+      id: dialogForm.id,
+      name: dialogForm.name,
+      classRoom: dialogForm.classRoom,
+      startTime: dialogForm.startTime,
+      endTime: dialogForm.endTime,
+      classLeader: dialogForm.classLeader,
+    }).then((res) => {
+      console.log(res, 'res');
+      fetchData()
+    })
+    // const index = tableData.value.findIndex(item => item.name === dialogForm.name)
+    // if (index !== -1) {
+    //   tableData.value[index] = { ...dialogForm }
+    // }
   }
   dialogVisible.value = false
 }
 
 const onDelete = (row: TableData) => {
   ElMessageBox.confirm(
-    `确认删除班级「${row.classname}」吗？`,
+    `确认删除班级「${row.name}」吗？`,
     '提示',
     {
       confirmButtonText: '确定',
@@ -178,9 +214,15 @@ const onDelete = (row: TableData) => {
     }
   ).then(() => {
     // 模拟删除：从 tableData 中移除
-    tableData.value = tableData.value.filter(item => item !== row)
-    ElMessage.success('删除成功')
-    fetchData() // 刷新数据
+    // tableData.value = tableData.value.filter(item => item !== row)
+    // ElMessage.success('删除成功')
+    console.log(row.id);
+
+    request.delete(`/class/delete/${row.id}`).then((res) => {
+      console.log(res, 'res');
+      fetchData() // 刷新数据
+
+    })
   }).catch(() => {
     ElMessage.info('已取消删除')
   })
