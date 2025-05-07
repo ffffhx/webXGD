@@ -94,12 +94,12 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { UploadProps } from 'element-plus'
 import request from '@/utils/request'
-import { id } from 'element-plus/es/locales.mjs'
 
 const form = reactive({
   name: '',
   gender: '',
-  entryDate: []
+  entryDate: [],
+
 })
 
 const tableData = ref<any[]>([])
@@ -107,10 +107,14 @@ const multipleSelection = ref<any[]>([])
 
 
 const fetchData = () => {
+  console.log(form, 'form');
+
   request.get('/emps', {
     params: {
-      page: 1,
-      pageSize: 20
+      name: form.name,
+      gender: form.gender,
+      begin: form.entryDate[0],
+      end: form.entryDate[1]
     }
   }).then((res) => {
     console.log(res, 'res');
@@ -123,7 +127,18 @@ const fetchData = () => {
 onMounted(fetchData)
 
 const onSearch = () => {
-  console.log('查询:', form)
+  request.get('/emps', {
+    params: {
+      name: form.name,
+      gender: form.gender,
+      begin: form.entryDate[0],
+      end: form.entryDate[1]
+    }
+  }).then((res) => {
+    console.log(res, 'res');
+    tableData.value = res.data.rows
+
+  })
 }
 
 const handleSelectionChange = (val: any[]) => {
