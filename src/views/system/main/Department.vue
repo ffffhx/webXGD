@@ -34,12 +34,16 @@
 <script lang="ts" setup>
 import { reactive, ref, onMounted } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import Swal from 'sweetalert2'
+import BasePage from '@/components/layout/BasePage.vue'
+
+import request from '@/utils/request'
+
 
 // 表格数据结构
 interface Department {
   name: string
   updateTime: string
+  id?: number
 }
 
 // 表格状态
@@ -53,12 +57,23 @@ const dialogForm = reactive<Department>({
   updateTime: ''
 })
 
+
 // 初始化数据
 const fetchData = () => {
-  tableData.value = [
-    { name: '人事部', updateTime: '2025-05-01 10:00' },
-    { name: '教务部', updateTime: '2025-05-01 11:00' }
-  ]
+  request.get('/depts').then(res => {
+    console.log(res.data, 'res.data');
+    // 对数组的每一项都执行后面那个回调函数
+    const filtered = res.data.map((item: any) => {
+      return {
+        name: item.name,
+        updateTime: item.updateTime,
+        id: item.id
+      }
+    })
+    console.log(filtered, 'fitered');
+    tableData.value = filtered
+  })
+
 }
 
 // 打开新增或编辑弹窗
@@ -81,45 +96,80 @@ const handleDialogSubmit = () => {
   }
 
   if (dialogTitle.value === '新增部门') {
-    tableData.value.unshift({ name: dialogForm.name, updateTime: now })
+    request.post('/depts', {
+      name: dialogForm.name
+    }).then((res) => {
+      console.log(res, 'res');
+    })
+    fetchData()
+    // tableData.value.unshift({ name: dialogForm.name, updateTime: now })
+    // 编辑部门
   } else {
-    const index = tableData.value.findIndex(item => item.name === dialogForm.name)
-    if (index !== -1) {
-      tableData.value[index].updateTime = now
-    }
+    // const index = tableData.value.findIndex(item => item.name === dialogForm.name)
+    // // 如果找到了
+    // if (index !== -1) {
+    //   tableData.value[index].updateTime = now
+    // }
+    request.put('/depts', {
+      id: dialogForm.id,
+      name: dialogForm.name
+    }).then((res) => {
+      console.log(res, 'res');
+      fetchData()
+
+    })
   }
 
   dialogVisible.value = false
   ElMessage.success('操作成功')
 }
 
+// Swal.fire({
+//   title: `确定删除部门「${row.name}」吗？`,
+//   text: "删除后将无法恢复！",
+//   icon: 'warning',
+//   showCancelButton: true,
+//   confirmButtonColor: '#3085d6',
+//   cancelButtonColor: '#d33',
+//   confirmButtonText: '确定',
+//   cancelButtonText: '取消'
+// }).then((result) => {
+//   if (result.isConfirmed) {
+//     tableData.value = tableData.value.filter(item => item !== row)
+//     Swal.fire(
+//       '删除成功！',
+//       `部门「${row.name}」已被删除。`,
+//       'success'
+//     )
+//   } else {
+//     Swal.fire(
+//       '已取消',
+//       '部门未被删除。',
+//       'info'
+//     )
+//   }
+
 // 删除操作
 const onDelete = (row: Department) => {
-  Swal.fire({
-    title: `确定删除部门「${row.name}」吗？`,
-    text: "删除后将无法恢复！",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
+  ElMessageBox.confirm(`确定删除部门「${row.name}」吗？`, '提示', {
     confirmButtonText: '确定',
-    cancelButtonText: '取消'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      tableData.value = tableData.value.filter(item => item !== row)
-      Swal.fire(
-        '删除成功！',
-        `部门「${row.name}」已被删除。`,
-        'success'
-      )
-    } else {
-      Swal.fire(
-        '已取消',
-        '部门未被删除。',
-        'info'
-      )
-    }
+    cancelButtonText: '取消',
+    type: 'warning'
   })
+    .then(() => {
+      // tableData.value = tableData.value.filter(item => item !== row)
+      console.log(row.id, 'row.id');
+
+      request.delete(`/depts/${row.id}`).then((res) => {
+        console.log(res);
+        ElMessage.success('删除成功')
+        fetchData()
+
+      })
+    })
+    .catch(() => {
+      ElMessage.info('已取消删除')
+    })
 }
 
 onMounted(fetchData)

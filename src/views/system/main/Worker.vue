@@ -90,22 +90,52 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { UploadProps } from 'element-plus'
+import request from '@/utils/request'
 import Swal from 'sweetalert2'
 
 const form = reactive({
   name: '',
   gender: '',
-  entryDate: []
+  entryDate: [],
+
 })
 
 const tableData = ref<any[]>([])
 const multipleSelection = ref<any[]>([])
 
+
+const fetchData = () => {
+  request.get('/emps', {
+    params: {
+      page: 1,
+      pageSize: 10
+    }
+  }).then((res) => {
+    console.log(res, 'res');
+    tableData.value = res.data.rows
+
+  })
+}
+
+
+onMounted(fetchData)
+
 const onSearch = () => {
-  console.log('查询:', form)
+  request.get('/emps', {
+    params: {
+      name: form.name,
+      gender: form.gender,
+      begin: form.entryDate[0],
+      end: form.entryDate[1]
+    }
+  }).then((res) => {
+    console.log(res, 'res');
+    tableData.value = res.data.rows
+
+  })
 }
 
 const handleSelectionChange = (val: any[]) => {
@@ -118,7 +148,15 @@ const batchDelete = () => {
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
-    tableData.value = tableData.value.filter(item => !multipleSelection.value.includes(item))
+
+    // tableData.value = tableData.value.filter(item => !multipleSelection.value.includes(item))
+    const filtered = multipleSelection.value.map((item) => {
+      return item.id
+    })
+
+    request.delete(`emps/${filtered}`).then((res) => {
+      fetchData()
+    })
     ElMessage.success('删除成功')
   })
 }
@@ -147,9 +185,12 @@ const rules = {
 
 const openDialog = (type: 'add' | 'edit', row?: any) => {
   dialogTitle.value = type === 'add' ? '新增员工' : '编辑员工'
+  // 编辑员工
   if (type === 'edit' && row) {
-    Object.assign(dialogForm, row)
-  } else {
+    Object.assign(dialogForm, row) //把row的全部复制到dialogForm中
+  }
+  // 新增员工
+  else {
     Object.assign(dialogForm, {
       username: '',
       name: '',
@@ -167,10 +208,29 @@ const handleSubmit = () => {
   formRef.value.validate((valid: boolean) => {
     if (valid) {
       if (dialogTitle.value === '新增员工') {
-        tableData.value.unshift({ ...dialogForm, lastOperate: new Date().toLocaleString() })
+        // tableData.value.unshift({ ...dialogForm, lastOperate: new Date().toLocaleString() })
+        request.post('/emps', {
+          username: dialogForm.username,
+          name: dialogForm.name,
+          gender: dialogForm.gender === '男' ? 1 : 2
+        }).then((res) => {
+          fetchData()
+
+        })
+
       } else {
-        const idx = tableData.value.findIndex(item => item.username === dialogForm.username)
-        if (idx !== -1) tableData.value[idx] = { ...dialogForm, lastOperate: new Date().toLocaleString() }
+        // 修改员工
+        request.put('/emps', {
+          id: dialogForm.id,
+          username: dialogForm.username,
+          name: dialogForm.name,
+          gender: dialogForm.gender === '男' ? 1 : 2
+        }).then((res) => {
+          fetchData()
+
+        })
+        // const idx = tableData.value.findIndex(item => item.username === dialogForm.username)
+        // if (idx !== -1) tableData.value[idx] = { ...dialogForm, lastOperate: new Date().toLocaleString() }
       }
       dialogVisible.value = false
       ElMessage.success('提交成功')
@@ -190,6 +250,12 @@ const onDelete = (row: any) => {
     cancelButtonText: '取消'
   }).then((result) => {
     if (result.isConfirmed) {
+      request.delete(`/emps/${row.id}`).then((res) => {
+        console.log(res, 'res');
+        fetchData()
+      }).catch(err => {
+        console.log(err, 'err');
+      })
       tableData.value = tableData.value.filter(item => item !== row)
       Swal.fire(
         '删除成功！',
