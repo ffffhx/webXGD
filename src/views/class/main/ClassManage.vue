@@ -103,8 +103,11 @@ const onSubmit = () => {
 
 const fetchData = async () => {
   request.post('/class/list', {
-    page: 1,
-    pageSize: 10,
+    page: page.value,
+    pageSize: pageSize.value,
+    name: form.name,
+    startTime: form.dateRange[0],
+    endTime: form.dateRange[1]
   }).then((res) => {
     console.log(res, 'res');
     tableData.value = res.data.rows

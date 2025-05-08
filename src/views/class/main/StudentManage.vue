@@ -158,8 +158,12 @@ const fetchData = () => {
   // }))
   // total.value = 40
   request.post('/student/list', {
-    page: 1,
-    pageSize: 10
+    page: page.value,
+    pageSize: pageSize.value,
+    name: form.name,
+    studentNumber: form.studentNumber,
+    highestEducation: form.highestEducation,
+    classId: form.classId,
   }).then((res: any) => {
     console.log(res);
     tableData.value = res.data.rows
