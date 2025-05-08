@@ -12,7 +12,7 @@
           <el-button type="primary" @click="handleLogin" style="width: 100%">登录</el-button>
         </el-form-item>
         <el-form-item style="text-align: right">
-          <el-button type="text" @click="goToRegister">去注册</el-button>
+          <el-button type="link">去注册</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -30,35 +30,32 @@ const form = reactive({
 })
 
 import { ElMessage } from 'element-plus'
-import axios from 'axios'
+import request from '@/utils/request.ts'
 
-const handleLogin = async () => {
+const handleLogin = () => {
   if (!form.username || !form.password) {
     ElMessage.error('请输入用户名和密码')
     return
   }
 
-  try {
-    const res = await axios.post('/api/login', {
-      username: form.username,
-      password: form.password
-    })
-
-    if (res.data.code === 0) {
-      localStorage.setItem('token', res.data.data.token)
-      ElMessage.success('登录成功')
-      router.push('/class')
-    } else {
-      ElMessage.error(res.data.message || '登录失败')
+  request.post('/login', {
+    username: form.username,
+    password: form.password
+  }).then((res) => {
+    console.log(res, 'res');
+    if (res.code === 1) {
+      localStorage.setItem('token', res.data)
+      console.log('登录成功');
+      router.push('class')
     }
-  } catch (error) {
-    ElMessage.error('网络错误或服务器异常')
-  }
+  }).catch(err => {
+    console.log(err, 'err');
+
+  })
+
 }
 
-const goToRegister = () => {
-  router.push('/register')
-}
+
 </script>
 
 <style scoped>

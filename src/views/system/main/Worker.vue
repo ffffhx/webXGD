@@ -1,112 +1,144 @@
 <template>
-  <BasePage> <!-- 查询条件 -->
-    <el-form :model="form" inline>
-      <el-form-item label="姓名">
-        <el-input v-model="form.name" placeholder="请输入姓名" />
+  <!-- 查询条件 -->
+  <el-form :model="form" inline>
+    <el-form-item label="姓名">
+      <el-input v-model="form.name" placeholder="请输入姓名" />
+    </el-form-item>
+    <el-form-item label="性别">
+      <el-select v-model="form.gender" placeholder="请选择">
+        <el-option label="男" value="男" />
+        <el-option label="女" value="女" />
+      </el-select>
+    </el-form-item>
+    <el-form-item label="入职时间">
+      <el-date-picker v-model="form.entryDate" type="daterange" range-separator="至" start-placeholder="开始日期"
+        end-placeholder="结束日期" />
+    </el-form-item>
+    <el-form-item>
+      <el-button type="primary" @click="onSearch">查询</el-button>
+    </el-form-item>
+  </el-form>
+
+  <!-- 操作按钮 -->
+  <div style="margin-bottom: 10px;">
+    <el-button type="primary" @click="openDialog('add')">新增员工</el-button>
+    <el-button type="danger" :disabled="!multipleSelection.length" @click="batchDelete">批量删除</el-button>
+  </div>
+
+  <!-- 表格 -->
+  <el-table :data="tableData" border style="width: 100%" @selection-change="handleSelectionChange">
+    <el-table-column type="selection" width="55" />
+    <el-table-column type="index" label="序号" width="60" />
+    <el-table-column prop="name" label="姓名" />
+    <el-table-column label="图像" width="100">
+      <template #default="{ row }">
+        <el-image :src="row.avatar" style="width: 60px; height: 60px" v-if="row.avatar" />
+        <span v-else>无</span>
+      </template>
+    </el-table-column>
+    <el-table-column prop="gender" label="性别" />
+    <el-table-column prop="position" label="职位" />
+    <el-table-column prop="entryDate" label="入职日期" />
+    <el-table-column prop="lastOperate" label="最后操作时间" />
+    <el-table-column label="操作" width="180">
+      <template #default="{ row }">
+        <el-button type="primary" size="small" @click="openDialog('edit', row)">编辑</el-button>
+        <el-button type="danger" size="small" @click="onDelete(row)">删除</el-button>
+      </template>
+    </el-table-column>
+  </el-table>
+
+  <!-- 新增/编辑员工弹窗 -->
+  <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
+    <el-form :model="dialogForm" label-width="100px" :rules="rules" ref="formRef">
+      <el-form-item label="用户名" prop="username">
+        <el-input v-model="dialogForm.username" />
       </el-form-item>
-      <el-form-item label="性别" style="width: 150px;">
-        <el-select v-model="form.gender" placeholder="请选择">
+      <el-form-item label="姓名" prop="name">
+        <el-input v-model="dialogForm.name" />
+      </el-form-item>
+      <el-form-item label="性别" prop="gender">
+        <el-select v-model="dialogForm.gender" placeholder="请选择">
           <el-option label="男" value="男" />
           <el-option label="女" value="女" />
         </el-select>
       </el-form-item>
-      <el-form-item label="入职时间">
-        <el-date-picker v-model="form.entryDate" type="daterange" range-separator="至" start-placeholder="开始日期"
-          end-placeholder="结束日期" />
+      <el-form-item label="图像">
+        <el-upload class="avatar-uploader" :action="uploadUrl" :show-file-list="false" :on-success="handleAvatarSuccess"
+          :before-upload="beforeAvatarUpload">
+          <img v-if="dialogForm.avatar" :src="dialogForm.avatar" class="avatar" />
+          <el-icon v-else>
+            <Plus />
+          </el-icon>
+        </el-upload>
       </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="onSearch">查询</el-button>
+      <el-form-item label="职位">
+        <el-input v-model="dialogForm.position" />
+      </el-form-item>
+      <el-form-item label="入职日期">
+        <el-date-picker v-model="dialogForm.entryDate" type="date" />
+      </el-form-item>
+      <el-form-item label="归属部门">
+        <el-input v-model="dialogForm.department" />
       </el-form-item>
     </el-form>
-
-    <!-- 操作按钮 -->
-    <div style="margin-bottom: 10px;">
-      <el-button type="primary" plain @click="openDialog('add')">新增员工</el-button>
-      <el-button type="danger" :disabled="!multipleSelection.length" @click="batchDelete">批量删除</el-button>
-    </div>
-
-    <!-- 表格 -->
-    <el-table :data="tableData" border style="width: 100%" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" />
-      <el-table-column type="index" label="序号" width="60" />
-      <el-table-column prop="name" label="姓名" />
-      <el-table-column label="图像" width="100">
-        <template #default="{ row }">
-          <el-image :src="row.avatar" style="width: 60px; height: 60px" v-if="row.avatar" />
-          <span v-else>无</span>
-        </template>
-      </el-table-column>
-      <el-table-column prop="gender" label="性别" />
-      <el-table-column prop="position" label="职位" />
-      <el-table-column prop="entryDate" label="入职日期" />
-      <el-table-column prop="lastOperate" label="最后操作时间" />
-      <el-table-column label="操作" width="180">
-        <template #default="{ row }">
-          <el-button type="primary" size="small" @click="openDialog('edit', row)">编辑</el-button>
-          <el-button type="danger" size="small" @click="onDelete(row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 新增/编辑员工弹窗 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
-      <el-form :model="dialogForm" label-width="100px" :rules="rules" ref="formRef">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="dialogForm.username" />
-        </el-form-item>
-        <el-form-item label="姓名" prop="name">
-          <el-input v-model="dialogForm.name" />
-        </el-form-item>
-        <el-form-item label="性别" prop="gender">
-          <el-select v-model="dialogForm.gender" placeholder="请选择">
-            <el-option label="男" value="男" />
-            <el-option label="女" value="女" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="图像">
-          <el-upload class="avatar-uploader" :action="uploadUrl" :show-file-list="false"
-            :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload">
-            <img v-if="dialogForm.avatar" :src="dialogForm.avatar" class="avatar" />
-            <el-icon v-else>
-              <Plus />
-            </el-icon>
-          </el-upload>
-        </el-form-item>
-        <el-form-item label="职位">
-          <el-input v-model="dialogForm.position" />
-        </el-form-item>
-        <el-form-item label="入职日期">
-          <el-date-picker v-model="dialogForm.entryDate" type="date" />
-        </el-form-item>
-        <el-form-item label="归属部门">
-          <el-input v-model="dialogForm.department" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确认</el-button>
-      </template>
-    </el-dialog>
-  </BasePage>
+    <template #footer>
+      <el-button @click="dialogVisible = false">取消</el-button>
+      <el-button type="primary" @click="handleSubmit">确认</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { UploadProps } from 'element-plus'
-import BasePage from '@/components/layout/BasePage.vue'
+import request from '@/utils/request'
 
 const form = reactive({
   name: '',
   gender: '',
-  entryDate: []
+  entryDate: [],
+
 })
 
 const tableData = ref<any[]>([])
 const multipleSelection = ref<any[]>([])
 
+
+const fetchData = () => {
+  console.log(form, 'form');
+
+  request.get('/emps', {
+    params: {
+      name: form.name,
+      gender: form.gender,
+      begin: form.entryDate[0],
+      end: form.entryDate[1]
+    }
+  }).then((res) => {
+    console.log(res, 'res');
+    tableData.value = res.data.rows
+
+  })
+}
+
+
+onMounted(fetchData)
+
 const onSearch = () => {
-  console.log('查询:', form)
+  request.get('/emps', {
+    params: {
+      name: form.name,
+      gender: form.gender,
+      begin: form.entryDate[0],
+      end: form.entryDate[1]
+    }
+  }).then((res) => {
+    console.log(res, 'res');
+    tableData.value = res.data.rows
+
+  })
 }
 
 const handleSelectionChange = (val: any[]) => {
@@ -119,7 +151,15 @@ const batchDelete = () => {
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
-    tableData.value = tableData.value.filter(item => !multipleSelection.value.includes(item))
+
+    // tableData.value = tableData.value.filter(item => !multipleSelection.value.includes(item))
+    const filtered = multipleSelection.value.map((item) => {
+      return item.id
+    })
+
+    request.delete(`emps/${filtered}`).then((res) => {
+      fetchData()
+    })
     ElMessage.success('删除成功')
   })
 }
@@ -148,9 +188,12 @@ const rules = {
 
 const openDialog = (type: 'add' | 'edit', row?: any) => {
   dialogTitle.value = type === 'add' ? '新增员工' : '编辑员工'
+  // 编辑员工
   if (type === 'edit' && row) {
-    Object.assign(dialogForm, row)
-  } else {
+    Object.assign(dialogForm, row) //把row的全部复制到dialogForm中
+  }
+  // 新增员工
+  else {
     Object.assign(dialogForm, {
       username: '',
       name: '',
@@ -168,10 +211,29 @@ const handleSubmit = () => {
   formRef.value.validate((valid: boolean) => {
     if (valid) {
       if (dialogTitle.value === '新增员工') {
-        tableData.value.unshift({ ...dialogForm, lastOperate: new Date().toLocaleString() })
+        // tableData.value.unshift({ ...dialogForm, lastOperate: new Date().toLocaleString() })
+        request.post('/emps', {
+          username: dialogForm.username,
+          name: dialogForm.name,
+          gender: dialogForm.gender === '男' ? 1 : 2
+        }).then((res) => {
+          fetchData()
+
+        })
+
       } else {
-        const idx = tableData.value.findIndex(item => item.username === dialogForm.username)
-        if (idx !== -1) tableData.value[idx] = { ...dialogForm, lastOperate: new Date().toLocaleString() }
+        // 修改员工
+        request.put('/emps', {
+          id: dialogForm.id,
+          username: dialogForm.username,
+          name: dialogForm.name,
+          gender: dialogForm.gender === '男' ? 1 : 2
+        }).then((res) => {
+          fetchData()
+
+        })
+        // const idx = tableData.value.findIndex(item => item.username === dialogForm.username)
+        // if (idx !== -1) tableData.value[idx] = { ...dialogForm, lastOperate: new Date().toLocaleString() }
       }
       dialogVisible.value = false
       ElMessage.success('提交成功')
@@ -185,7 +247,13 @@ const onDelete = (row: any) => {
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
-    tableData.value = tableData.value.filter(item => item !== row)
+    request.delete(`/emps/${row.id}`).then((res) => {
+      console.log(res, 'res');
+      fetchData()
+    }).catch(err => {
+      console.log(err, 'err');
+    })
+    // tableData.value = tableData.value.filter(item => item !== row)
     ElMessage.success('删除成功')
   })
 }
