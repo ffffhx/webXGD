@@ -34,12 +34,18 @@
 <script lang="ts" setup>
 import { reactive, ref, onMounted } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import Swal from 'sweetalert2'
+<<<<<<<< <Temporary merge branch 1
+import BasePage from '@/components/layout/BasePage.vue'
+=========
+import request from '@/utils/request'
+import { id } from 'element-plus/es/locales.mjs'
+>>>>>>>>> Temporary merge branch 2
 
 // 表格数据结构
 interface Department {
   name: string
   updateTime: string
+  id?: number
 }
 
 // 表格状态
@@ -53,12 +59,22 @@ const dialogForm = reactive<Department>({
   updateTime: ''
 })
 
+<<<<<<<<< Temporary merge branch 1
 // 初始化数据
 const fetchData = () => {
-  tableData.value = [
-    { name: '人事部', updateTime: '2025-05-01 10:00' },
-    { name: '教务部', updateTime: '2025-05-01 11:00' }
-  ]
+  request.get('/depts').then(res => {
+    console.log(res.data, 'res.data');
+    // 对数组的每一项都执行后面那个回调函数
+    const filtered = res.data.map((item: any) => {
+      return {
+        name: item.name,
+        updateTime: item.updateTime,
+        id: item.id
+      }
+    })
+    console.log(filtered, 'fitered');
+    tableData.value = filtered
+  })
 }
 
 // 打开新增或编辑弹窗
@@ -106,7 +122,10 @@ const onDelete = (row: Department) => {
     cancelButtonText: '取消'
   }).then((result) => {
     if (result.isConfirmed) {
-      tableData.value = tableData.value.filter(item => item !== row)
+      request.delete(`/depts/${row.id}`).then((res) => {
+        console.log(res);
+      })
+      // tableData.value = tableData.value.filter(item => item !== row)
       Swal.fire(
         '删除成功！',
         `部门「${row.name}」已被删除。`,
@@ -119,8 +138,93 @@ const onDelete = (row: Department) => {
         'info'
       )
     }
+  })}
+=========
+
+// 初始化数据
+const fetchData = () => {
+  request.get('/depts').then(res => {
+    console.log(res.data, 'res.data');
+    // 对数组的每一项都执行后面那个回调函数
+    const filtered = res.data.map((item: any) => {
+      return {
+        name: item.name,
+        updateTime: item.updateTime,
+        id: item.id
+      }
+    })
+    console.log(filtered, 'fitered');
+    tableData.value = filtered
   })
+
 }
+
+// 打开新增或编辑弹窗
+const openDialog = (type: 'add' | 'edit', row?: Department) => {
+  dialogTitle.value = type === 'add' ? '新增部门' : '编辑部门'
+  if (type === 'edit' && row) {
+    Object.assign(dialogForm, { ...row })
+  } else {
+    Object.assign(dialogForm, { name: '', updateTime: '' })
+  }
+  dialogVisible.value = true
+}
+
+// 提交新增/编辑表单
+const handleDialogSubmit = () => {
+  const now = new Date().toLocaleString()
+  if (!dialogForm.name.trim()) {
+    ElMessage.warning('部门名称不能为空')
+    return
+  }
+
+  if (dialogTitle.value === '新增部门') {
+    request.post('/depts', {
+      name: dialogForm.name
+    }).then((res) => {
+      console.log(res, 'res');
+    })
+    fetchData()
+    // tableData.value.unshift({ name: dialogForm.name, updateTime: now })
+    // 编辑部门
+  } else {
+    // const index = tableData.value.findIndex(item => item.name === dialogForm.name)
+    // // 如果找到了
+    // if (index !== -1) {
+    //   tableData.value[index].updateTime = now
+    // }
+    request.put('/depts', {
+      id: dialogForm.id,
+      name: dialogForm.name
+    }).then((res) => {
+      console.log(res, 'res');
+
+    })
+  }
+
+  dialogVisible.value = false
+  ElMessage.success('操作成功')
+}
+
+// 删除操作
+// const onDelete = (row: Department) => {
+//   ElMessageBox.confirm(`确定删除部门「${row.name}」吗？`, '提示', {
+//     confirmButtonText: '确定',
+//     cancelButtonText: '取消',
+//     type: 'warning'
+//   })
+//     .then(() => {
+//       // tableData.value = tableData.value.filter(item => item !== row)
+//       console.log(row.id, 'row.id');
+
+
+//       ElMessage.success('删除成功')
+//     })
+>>>>>>>>> Temporary merge branch 2
+    // .catch(() => {
+    //   ElMessage.info('已取消删除')
+    // })
+// }
 
 onMounted(fetchData)
 </script>
