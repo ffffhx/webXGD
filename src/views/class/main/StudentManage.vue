@@ -1,111 +1,113 @@
 <template>
-  <div>
-    <!-- 查询表单 -->
-    <el-form :model="form" label-width="100px" inline>
-      <el-form-item label="学员姓名">
-        <el-input v-model="form.name" placeholder="请输入姓名" />
-      </el-form-item>
-      <el-form-item label="学号">
-        <el-input v-model="form.studentNumber" placeholder="请输入学号" />
-      </el-form-item>
-      <el-form-item label="最高学历">
-        <el-select v-model="form.highestEducation" placeholder="请选择">
-          <el-option v-for="item in highestEducationOptions" :key="item" :label="item" :value="item" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="所属班级">
-        <el-select v-model="form.classId" placeholder="请选择">
-          <el-option v-for="item in classOptions" :key="item" :label="item" :value="item" />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="onSearch">查询</el-button>
-      </el-form-item>
-    </el-form>
-
-    <!-- 操作按钮 -->
-    <div style="margin: 10px 0">
-      <el-button type="primary" @click="openDialog('add')">添加学员</el-button>
-      <!-- <el-button type="danger" @click="onBatchDelete" :disabled="!multipleSelection.length">批量删除</el-button> -->
-    </div>
-
-    <!-- 学员表格 -->
-    <el-table :data="tableData" border style="width: 100%" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="50" />
-      <el-table-column prop="name" label="姓名" />
-      <el-table-column prop="studentNumber" label="学号" />
-      <el-table-column prop="classId" label="班级" />
-      <el-table-column prop="gender" label="性别" />
-      <el-table-column prop="phone" label="手机号" />
-      <el-table-column prop="highestEducation" label="最高学历" />
-      <el-table-column prop="violationCount" label="违纪次数" />
-      <el-table-column prop="violationScore" label="违纪扣分" />
-      <el-table-column prop="lastOperateTime" label="最后操作时间" />
-      <el-table-column label="操作" width="250">
-        <template #default="scope">
-          <el-button size="small" @click="openDialog('edit', scope.row)" text>编辑</el-button>
-          <el-button size="small" @click="handleDiscipline(scope.row)" text type="warning">违纪</el-button>
-          <el-button size="small" @click="handleDelete(scope.row)" text type="danger">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 学员分页 -->
-    <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
-      <div>共 {{ total }} 条</div>
-      <el-pagination background layout="prev, pager, next, jumper, ->, total, sizes" :current-page="page"
-        :page-size="pageSize" :page-sizes="[5, 10, 20]" :total="total" @current-change="handlePageChange"
-        @size-change="handleSizeChange" />
-    </div>
-
-    <!-- 添加/编辑弹窗 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
-      <el-form :model="dialogForm" :rules="dialogRules" label-width="100px" ref="dialogFormRef">
-        <el-form-item label="姓名" prop="name">
-          <el-input v-model="dialogForm.name" />
+  <BasePage>
+    <div>
+      <!-- 查询表单 -->
+      <el-form :model="form" label-width="100px" inline>
+        <el-form-item label="学员姓名">
+          <el-input v-model="form.name" placeholder="请输入姓名" />
         </el-form-item>
-        <el-form-item label="学号" prop="studentNumber">
-          <el-input v-model="dialogForm.studentNumber" />
-        </el-form-item>
-        <el-form-item label="性别" prop="gender">
-          <el-select v-model="dialogForm.gender">
-            <el-option label="男" value="男" />
-            <el-option label="女" value="女" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="dialogForm.phone" />
+        <el-form-item label="学号">
+          <el-input v-model="form.studentNumber" placeholder="请输入学号" />
         </el-form-item>
         <el-form-item label="最高学历">
-          <el-select v-model="dialogForm.highestEducation" placeholder="可选">
+          <el-select v-model="form.highestEducation" placeholder="请选择" style="width: 100px;">
             <el-option v-for="item in highestEducationOptions" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
-        <el-form-item label="所属班级" prop="classId">
-          <el-select v-model="dialogForm.classId">
+        <el-form-item label="所属班级">
+          <el-select v-model="form.classId" placeholder="请选择" style="width: 100px;">
             <el-option v-for="item in classOptions" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确认</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 违纪弹窗 -->
-    <el-dialog v-model="disciplineDialogVisible" title="违纪处理" width="400px">
-      <el-form>
-        <el-form-item label="扣分">
-          <el-input-number v-model="violationScoreInput" :min="1" />
+        <el-form-item>
+          <el-button type="primary" @click="onSearch">查询</el-button>
         </el-form-item>
       </el-form>
-      <template #footer>
-        <el-button @click="disciplineDialogVisible = false">取消</el-button>
-        <el-button type="warning" @click="confirmDiscipline">确认</el-button>
-      </template>
-    </el-dialog>
-  </div>
+
+      <!-- 操作按钮 -->
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 2px; margin-right:5px ;">
+        <el-button type="primary" plain @click="openDialog('add')">添加学员</el-button>
+        <!-- <el-button type="danger" @click="onBatchDelete" :disabled="!multipleSelection.length">批量删除</el-button> -->
+      </div>
+
+      <!-- 学员表格 -->
+      <el-table :data="tableData" border style="width: 100%" @selection-change="handleSelectionChange">
+        <el-table-column prop="name" label="姓名" />
+        <el-table-column prop="studentNumber" label="学号" />
+        <el-table-column prop="classId" label="班级" />
+        <el-table-column prop="gender" label="性别" />
+        <el-table-column prop="phone" label="手机号" />
+        <el-table-column prop="highestEducation" label="最高学历" />
+        <el-table-column prop="violationCount" label="违纪次数" />
+        <el-table-column prop="violationScore" label="违纪扣分" />
+        <el-table-column prop="lastOperateTime" label="最后操作时间" />
+        <el-table-column label="操作" width="250">
+          <template #default="scope">
+            <el-button size="small" @click="openDialog('edit', scope.row)" text>编辑</el-button>
+            <el-button size="small" @click="handleDiscipline(scope.row)" text type="warning">违纪</el-button>
+            <el-button size="small" @click="handleDelete(scope.row)" text type="danger">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 学员分页 -->
+      <div style="margin-top: 20px; display: flex; justify-content: end; align-items: center;">
+
+        <el-pagination background layout="prev, pager, next, jumper, ->, total, sizes" :current-page="page"
+          :page-size="pageSize" :page-sizes="[5, 10, 20]" :total="total" @current-change="handlePageChange"
+          @size-change="handleSizeChange" />
+      </div>
+
+      <!-- 添加/编辑弹窗 -->
+      <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
+        <el-form :model="dialogForm" :rules="dialogRules" label-width="100px" ref="dialogFormRef">
+          <el-form-item label="姓名" prop="name">
+            <el-input v-model="dialogForm.name" />
+          </el-form-item>
+          <el-form-item label="学号" prop="studentNumber">
+            <el-input v-model="dialogForm.studentNumber" />
+          </el-form-item>
+          <el-form-item label="性别" prop="gender">
+            <el-select v-model="dialogForm.gender">
+              <el-option label="男" value="男" />
+              <el-option label="女" value="女" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="手机号" prop="phone">
+            <el-input v-model="dialogForm.phone" />
+          </el-form-item>
+          <el-form-item label="最高学历">
+            <el-select v-model="dialogForm.highestEducation" placeholder="可选">
+              <el-option v-for="item in highestEducationOptions" :key="item" :label="item" :value="item" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="所属班级" prop="classId">
+            <el-select v-model="dialogForm.classId">
+              <el-option v-for="item in classOptions" :key="item" :label="item" :value="item" />
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitForm">确认</el-button>
+        </template>
+      </el-dialog>
+
+      <!-- 违纪弹窗 -->
+      <el-dialog v-model="disciplineDialogVisible" title="违纪处理" width="400px">
+        <el-form>
+          <el-form-item label="扣分">
+            <el-input-number v-model="violationScoreInput" :min="1" />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="disciplineDialogVisible = false">取消</el-button>
+          <el-button type="warning" @click="confirmDiscipline">确认</el-button>
+        </template>
+      </el-dialog>
+    </div>
+  </BasePage>
+
 </template>
 
 <script setup lang="ts">
@@ -113,6 +115,8 @@ import { reactive, ref } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import request from '@/utils/request'
+import BasePage from '@/components/layout/BasePage.vue'
+import Swal from 'sweetalert2'
 
 interface Student {
   id: number
@@ -299,28 +303,54 @@ const submitForm = () => {
 
         })
       }
-      ElMessage.success('保存成功')
+      Swal.fire({
+        icon: 'success',
+        title: '操作成功',
+
+      })
     }
   })
 }
 
 const handleDelete = (row: Student) => {
-  ElMessageBox.confirm(`确定删除学员「${row.name}」吗？`, '提示', {
+  Swal.fire({
+    title: `确定删除学员「${row.name}」吗？`,
+    text: '删除后将无法恢复！',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
     confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    request.delete(`/student/delete/${row.id}`).then(res => {
-      console.log(res);
-      fetchData()
-    }).catch(err => {
-      console.log(err);
-
-    })
-    // tableData.value = tableData.value.filter(item => item !== row)
-    ElMessage.success('删除成功')
-  })
-}
+    cancelButtonText: '取消'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // 调用删除接口
+      request.delete(`/student/delete/${row.id}`).then((res) => {
+        console.log(res);
+        // 刷新数据
+        fetchData();
+        Swal.fire(
+          '删除成功！',
+          `学员「${row.name}」已被删除。`,
+          'success'
+        );
+      }).catch((err) => {
+        console.error(err);
+        Swal.fire(
+          '删除失败！',
+          '请稍后重试。',
+          'error'
+        );
+      });
+    } else {
+      Swal.fire(
+        '已取消',
+        '学员未被删除。',
+        'info'
+      );
+    }
+  });
+};
 
 const disciplineDialogVisible = ref(false)
 const violationScoreInput = ref(1)
@@ -347,7 +377,11 @@ const confirmDiscipline = () => {
     }).then((res) => {
       console.log(res, 'res');
     })
-    ElMessage.success('违纪记录成功')
+    Swal.fire({
+      icon: 'success',
+      title: '违纪处理成功',
+      text: `学员「${currentStudent.value.name}」的违纪扣分已更新。`
+    })
     disciplineDialogVisible.value = false
   }
 }

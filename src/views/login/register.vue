@@ -19,55 +19,56 @@
         </el-form-item>
       </el-form>
     </div>
-  </div>  
-  </template>
-  
-  <script setup lang="ts">
-  import { reactive } from 'vue'
-  import { useRouter } from 'vue-router'
-  
-  const router = useRouter()
-  const form = reactive({
-    username: '',
-    password: '',
-    confirmPassword: ''
-  })
-  
-  const handleRegister = () => {
-    // 注册逻辑（自行对接接口）
-    if (form.password !== form.confirmPassword) {
-      alert('两次密码不一致')
-      return
-    }
-    console.log('注册中...', form)
+  </div>
+</template>
+
+<script setup lang="ts">
+import { reactive } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const form = reactive({
+  username: '',
+  password: '',
+  confirmPassword: ''
+})
+
+const handleRegister = () => {
+  // 注册逻辑（自行对接接口）
+  if (form.password !== form.confirmPassword) {
+    alert('两次密码不一致')
+    return
   }
-  
-  const goToLogin = () => {
-    router.push('/login')
-  }
-  </script>
-  
-  <style scoped>
-  .register-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-  .register-form {
-    width: 400px;
-    padding: 40px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    background-color: white;
-  }
-  .wrapper {
+  console.log('注册中...', form)
+}
+
+const goToLogin = () => {
+  router.push('/login')
+}
+</script>
+
+<style scoped>
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.register-form {
+  width: 400px;
+  padding: 40px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: white;
+}
+
+.wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
   width: 100em;
 }
-  </style>
-  
+</style>

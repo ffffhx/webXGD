@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
-
+import Swal from 'sweetalert2'
 const router = useRouter()
 const form = reactive({
   username: '',
@@ -34,7 +34,12 @@ import request from '@/utils/request.ts'
 
 const handleLogin = () => {
   if (!form.username || !form.password) {
-    ElMessage.error('请输入用户名和密码')
+    Swal.fire({
+      icon: 'error',
+      title: '用户名或密码不能为空',
+      showConfirmButton: false,
+      timer: 1500
+    })
     return
   }
 
@@ -47,6 +52,12 @@ const handleLogin = () => {
       localStorage.setItem('token', res.data)
       console.log('登录成功');
       router.push('class')
+      Swal.fire({
+        icon: 'success',
+        title: '登录成功',
+        showConfirmButton: false,
+        timer: 1500
+      })
     }
   }).catch(err => {
     console.log(err, 'err');

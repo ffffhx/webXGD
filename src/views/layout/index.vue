@@ -28,7 +28,7 @@ import LayoutSider from './main/LayoutSide.vue'
 <style scoped lang="less">
 .layout-container {
   /* height: 100%; */
-  max-height: 100vh;
+  height: 100vh;
   width: 100vw;
 
 
@@ -42,21 +42,21 @@ import LayoutSider from './main/LayoutSide.vue'
 }
 
 .layout-body {
-  height: calc(100% - 60px);
+  // height: calc(100% - 60px);
   /* 减去顶部高度 */
   width: 100%;
 
 }
 
 .layout-aside {
-  // height: 100%;
+  height: 100%;
 }
 
 .layout-main {
   margin: 0 20px;
   // height: 100%;
 
-  overflow: auto;
+  overflow: hidden;
   background-color: #f5f5f5;
   // width: 100%;
 }

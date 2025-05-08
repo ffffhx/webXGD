@@ -20,7 +20,7 @@
       </el-form-item>
     </el-form>
 
-    <el-button type="primary" @click="openDialog('add')">新增班级</el-button>
+    <el-button type="primary" plain @click="openDialog('add')" style="margin-bottom: 2px;">新增班级</el-button>
 
     <el-table :data="tableData" border style="width: 100%">
       <el-table-column type="index" :index="1" />
@@ -37,8 +37,8 @@
       </el-table-column>
     </el-table>
 
-    <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
-      <div>共 {{ total }} 条</div>
+    <div style="margin-top: 20px; display: flex; justify-content: end; align-items: center;">
+      <!-- <div>共 {{ total }} 条</div> -->
       <el-pagination background layout="prev, pager, next, jumper, ->, total, sizes" :current-page="page"
         :page-size="pageSize" :page-sizes="[5, 10, 20, 50]" :total="total" @current-change="handlePageChange"
         @size-change="handleSizeChange" />
@@ -76,6 +76,7 @@ import { reactive, ref, onMounted } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import BasePage from '@/components/layout/BasePage.vue'
 import request from '@/utils/request'
+import Swal from 'sweetalert2'
 
 interface TableData {
   id?: number
@@ -184,7 +185,11 @@ const handleDialogSubmit = () => {
       console.log(err);
 
     });
-
+    Swal.fire({
+      icon: 'success',
+      title: '新增班级成功',
+      text: `班级「${dialogForm.name}」已被添加。`
+    })
   } else {
     // 修改
     request.put('class', {
@@ -207,28 +212,42 @@ const handleDialogSubmit = () => {
 }
 
 const onDelete = (row: TableData) => {
-  ElMessageBox.confirm(
-    `确认删除班级「${row.name}」吗？`,
-    '提示',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
+  Swal.fire({
+    title: `确认删除班级「${row.name}」吗？`,
+    text: "删除后将无法恢复！",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: '确定',
+    cancelButtonText: '取消'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // 调用删除接口
+      request.delete(`/class/delete/${row.id}`).then((res) => {
+        console.log(res, 'res');
+        fetchData(); // 刷新数据
+        Swal.fire(
+          '删除成功！',
+          `班级「${row.name}」已被删除。`,
+          'success'
+        );
+      }).catch((err) => {
+        console.error(err);
+        Swal.fire(
+          '班级里有学员,删除失败',
+          '请稍后重试。',
+          'error'
+        );
+      });
+    } else {
+      Swal.fire(
+        '已取消',
+        '班级未被删除。',
+        'info'
+      );
     }
-  ).then(() => {
-    // 模拟删除：从 tableData 中移除
-    // tableData.value = tableData.value.filter(item => item !== row)
-    // ElMessage.success('删除成功')
-    console.log(row.id);
-
-    request.delete(`/class/delete/${row.id}`).then((res) => {
-      console.log(res, 'res');
-      fetchData() // 刷新数据
-
-    })
-  }).catch(() => {
-    ElMessage.info('已取消删除')
-  })
-}
+  });
+};
 
 </script>

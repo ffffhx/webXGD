@@ -1,41 +1,45 @@
 <template>
-  <div>
-    <!-- 新增部门按钮 -->
-    <el-button type="primary" plain @click="openDialog('add')">新增部门</el-button>
+  <BasePage>
+    <div>
+      <!-- 新增部门按钮 -->
+      <el-button type="primary" plain @click="openDialog('add')">新增部门</el-button>
 
-    <!-- 部门表格 -->
-    <el-table :data="tableData" border style="width: 100%; margin-top: 20px;">
-      <el-table-column type="index" label="序号" width="60" />
-      <el-table-column prop="name" label="部门名称" />
-      <el-table-column prop="updateTime" label="最后操作时间" />
-      <el-table-column label="操作" fixed="right" width="180">
-        <template #default="scope">
-          <el-button size="small" type="primary" text @click="openDialog('edit', scope.row)">编辑</el-button>
-          <el-button size="small" type="danger" text @click="onDelete(scope.row)">删除</el-button>
+      <!-- 部门表格 -->
+      <el-table :data="tableData" border style="width: 100%; margin-top: 20px;">
+        <el-table-column type="index" label="序号" width="60" />
+        <el-table-column prop="name" label="部门名称" />
+        <el-table-column prop="updateTime" label="最后操作时间" />
+        <el-table-column label="操作" fixed="right" width="180">
+          <template #default="scope">
+            <el-button size="small" type="primary" text @click="openDialog('edit', scope.row)">编辑</el-button>
+            <el-button size="small" type="danger" text @click="onDelete(scope.row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 新增/编辑弹窗 -->
+      <el-dialog v-model="dialogVisible" :title="dialogTitle" width="400px">
+        <el-form :model="dialogForm" label-width="100px">
+          <el-form-item label="部门名称" required>
+            <el-input v-model="dialogForm.name" />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleDialogSubmit">确认</el-button>
         </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 新增/编辑弹窗 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="400px">
-      <el-form :model="dialogForm" label-width="100px">
-        <el-form-item label="部门名称" required>
-          <el-input v-model="dialogForm.name" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleDialogSubmit">确认</el-button>
-      </template>
-    </el-dialog>
-  </div>
+      </el-dialog>
+    </div>
+  </BasePage>
 </template>
 
 <script lang="ts" setup>
 import { reactive, ref, onMounted } from 'vue'
-import { ElMessageBox, ElMessage } from 'element-plus'
+// import {
+//   ElMessage
+// } from 'element-plus'
 import BasePage from '@/components/layout/BasePage.vue'
-
+import Swal from 'sweetalert2'
 import request from '@/utils/request'
 
 
@@ -91,7 +95,11 @@ const openDialog = (type: 'add' | 'edit', row?: Department) => {
 const handleDialogSubmit = () => {
   const now = new Date().toLocaleString()
   if (!dialogForm.name.trim()) {
-    ElMessage.warning('部门名称不能为空')
+    Swal.fire({
+      icon: 'warning',
+      title: '部门名称不能为空',
+      text: '请输入部门名称！'
+    })
     return
   }
 
@@ -100,8 +108,8 @@ const handleDialogSubmit = () => {
       name: dialogForm.name
     }).then((res) => {
       console.log(res, 'res');
+      fetchData()
     })
-    fetchData()
     // tableData.value.unshift({ name: dialogForm.name, updateTime: now })
     // 编辑部门
   } else {
@@ -121,7 +129,11 @@ const handleDialogSubmit = () => {
   }
 
   dialogVisible.value = false
-  ElMessage.success('操作成功')
+  Swal.fire({
+    icon: 'success',
+    title: '提交成功',
+    text: '部门信息已更新！'
+  })
 }
 
 // Swal.fire({
@@ -151,26 +163,54 @@ const handleDialogSubmit = () => {
 
 // 删除操作
 const onDelete = (row: Department) => {
-  ElMessageBox.confirm(`确定删除部门「${row.name}」吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  })
-    .then(() => {
-      // tableData.value = tableData.value.filter(item => item !== row)
-      console.log(row.id, 'row.id');
 
+  Swal.fire({
+    title: `确定删除部门「${row.name}」吗？`,
+    text: "删除后将无法恢复！",
+    icon: 'warning',
+    showCancelButton: true,
+    heightAuto: false,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: '确定',
+    cancelButtonText: '取消'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // 调用删除接口
       request.delete(`/depts/${row.id}`).then((res) => {
         console.log(res);
-        ElMessage.success('删除成功')
-        fetchData()
-
-      })
-    })
-    .catch(() => {
-      ElMessage.info('已取消删除')
-    })
+        // 从 tableData 中移除已删除的项
+        tableData.value = tableData.value.filter(item => item.id !== row.id);
+        Swal.fire(
+          '删除成功！',
+          `部门「${row.name}」已被删除。`,
+          'success'
+        );
+      }).catch((err) => {
+        console.error(err);
+        Swal.fire(
+          '删除失败！',
+          '请稍后重试。',
+          'error'
+        );
+      });
+    } else {
+      Swal.fire(
+        '已取消',
+        '部门未被删除。',
+        'info'
+      );
+    }
+  });
 }
 
 onMounted(fetchData)
 </script>
+
+
+<style scoped>
+body.swal2-height-auto {
+  height: auto !important;
+  overflow: auto !important;
+}
+</style>
