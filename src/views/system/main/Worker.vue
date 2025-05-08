@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { UploadProps } from 'element-plus'
 import Swal from 'sweetalert2'
@@ -106,8 +106,7 @@ const form = reactive({
 const tableData = ref<any[]>([])
 const multipleSelection = ref<any[]>([])
 
-  <<<<<<<< <Temporary merge branch 1
-=========
+
 
 const fetchData = () => {
   request.get('/emps', {
@@ -125,7 +124,6 @@ const fetchData = () => {
 
 onMounted(fetchData)
 
->>>>>>>>> Temporary merge branch 2
 const onSearch = () => {
   request.get('/emps', {
     params: {
@@ -254,11 +252,11 @@ const onDelete = (row: any) => {
 
     if (result.isConfirmed) {
       request.delete(`/emps/${row.id}`).then((res) => {
-      console.log(res, 'res');
-      fetchData()
-    }).catch(err => {
-      console.log(err, 'err');
-    })
+        console.log(res, 'res');
+        fetchData()
+      }).catch(err => {
+        console.log(err, 'err');
+      })
       tableData.value = tableData.value.filter(item => item !== row)
       Swal.fire(
         '删除成功！',
