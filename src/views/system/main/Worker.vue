@@ -130,13 +130,19 @@ const fetchData = () => {
 
   })
 }
-const uploadAvatar = () => {
-  request.post('/upload', {
-    image: dialogForm.image
+const uploadAvatar = (rawFile: File) => {
+  const formData = new FormData()
+  formData.append('image', rawFile); // rawFile 应该是一个 File 对象
+  request.post('/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
   }).then((res) => {
     console.log(res, 'res');
-    dialogForm.image = res.data.url
-  })
+    dialogForm.image = res.data;
+    console.log(dialogForm.image, 'dialogForm.image ');
+
+  });
 }
 
 onMounted(fetchData)
@@ -331,11 +337,10 @@ const onDelete = (row: any) => {
 // 上传图片逻辑
 const handleAvatarSuccess: UploadProps['onSuccess'] = (response, file) => {
   console.log('handleAvatarSuccess');
-
-  dialogForm.image = URL.createObjectURL(file.raw!)
 }
 
 const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
+  console.log(rawFile.type, 'rawFile.type');
 
   const isJpgOrPng = rawFile.type === 'image/jpeg' || rawFile.type === 'image/png' || rawFile.type === 'image/jpg'
   const isLt2M = rawFile.size / 1024 / 1024 < 2
@@ -346,6 +351,7 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
       title: '格式错误',
       text: '只能上传 JPG/PNG 格式的图片'
     })
+    document.querySelector('.swal2-container')!.style.zIndex = '9999'
     return false
   }
   if (!isLt2M) {
@@ -357,7 +363,7 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
     return false
   }
   console.log('图片符合要求');
-  uploadAvatar()
+  uploadAvatar(rawFile)
 
   return true
 }
