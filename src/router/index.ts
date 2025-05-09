@@ -1,3 +1,4 @@
+import { ElMessage } from 'element-plus'
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 
@@ -48,6 +49,7 @@ router.beforeEach(async (to, from) => {
     // ❗️ 避免无限重定向
     to.name !== 'Login'
   ) {
+    ElMessage.error('请先登录')
     // 将用户重定向到登录页面
     return { name: 'Login' }
   }
