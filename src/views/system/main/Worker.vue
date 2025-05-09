@@ -68,7 +68,7 @@
           <el-upload class="avatar-uploader" :action="uploadUrl" :show-file-list="false"
             :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload">
             <img v-if="dialogForm.image" :src="dialogForm.image" class="avatar" />
-            <el-icon v-else>
+            <el-icon v-else class="icon">
               <Plus />
             </el-icon>
           </el-upload>
@@ -330,11 +330,13 @@ const onDelete = (row: any) => {
 
 // 上传图片逻辑
 const handleAvatarSuccess: UploadProps['onSuccess'] = (response, file) => {
+  console.log('handleAvatarSuccess');
+
   dialogForm.image = URL.createObjectURL(file.raw!)
-  uploadAvatar()
 }
 
 const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
+
   const isJpgOrPng = rawFile.type === 'image/jpeg' || rawFile.type === 'image/png' || rawFile.type === 'image/jpg'
   const isLt2M = rawFile.size / 1024 / 1024 < 2
 
@@ -354,6 +356,9 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
     })
     return false
   }
+  console.log('图片符合要求');
+  uploadAvatar()
+
   return true
 }
 </script>
@@ -375,5 +380,10 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.icon {
+  width: 100px;
+  height: 100px;
 }
 </style>
