@@ -38,13 +38,11 @@
     </el-table>
 
     <div style="margin-top: 20px; display: flex; justify-content: end; align-items: center;">
-      <!-- <div>共 {{ total }} 条</div> -->
       <el-pagination background layout="prev, pager, next, jumper, ->, total, sizes" :current-page="page"
         :page-size="pageSize" :page-sizes="[5, 10, 20, 50]" :total="total" @current-change="handlePageChange"
         @size-change="handleSizeChange" />
     </div>
 
-    <!-- 新增/编辑班级对话框 -->
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
       <el-form :model="dialogForm" label-width="100px">
         <el-form-item label="班级名称">
@@ -73,10 +71,9 @@
 
 <script lang="ts" setup>
 import { reactive, ref, onMounted } from 'vue'
-import {  ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import BasePage from '@/components/layout/BasePage.vue'
 import request from '@/utils/request'
-import Swal from 'sweetalert2'
 
 interface TableData {
   id?: number
@@ -119,20 +116,11 @@ const fetchData = async () => {
     startTime: form.dateRange[0],
     endTime: form.dateRange[1]
   }).then((res) => {
-    console.log(res, 'res');
     tableData.value = res.data.rows
+    total.value = res.data.total
   }).catch((err) => {
-    console.log(err, 'err');
-
+    console.log(err)
   })
-  // tableData.value = Array.from({ length: pageSize.value }, (_, i) => ({
-  //   name: '生物',
-  //   classRoom: `高三${i + 1}班`,
-  //   startTime: '2024-09-01',
-  //   endTime: '2025-01-01',
-  //   classLeader: '徐华松'
-  // }))
-  // total.value = 100
 }
 
 const handlePageChange = (val: number) => {
@@ -149,7 +137,6 @@ onMounted(() => {
   fetchData()
 })
 
-// ------------------------ 弹窗逻辑 ------------------------
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 
@@ -178,9 +165,7 @@ const openDialog = (type: 'add' | 'edit', row?: TableData) => {
 }
 
 const handleDialogSubmit = () => {
-  // 新增
   if (dialogTitle.value === '新增班级') {
-    // tableData.value.unshift({ ...dialogForm })
     request.post('class/add', {
       name: dialogForm.name,
       classRoom: dialogForm.classRoom,
@@ -188,27 +173,16 @@ const handleDialogSubmit = () => {
       endTime: dialogForm.endTime,
       classLeader: dialogForm.classLeader
     }).then(res => {
-      console.log(res,'新增班级的res');
       if (res.code === 0) {
-        Swal.fire({
-          icon: 'error',
-          title: '新增班级失败',
-          text: '班主任不在员工列表内部'
-        })
+        ElMessage.error('新增班级失败：班主任不在员工列表内部')
         return
       }
+      ElMessage.success(`新增班级成功，班级「${dialogForm.name}」已被添加`)
       fetchData()
     }).catch(err => {
-      console.log(err);
-
+      console.log(err)
     });
-    Swal.fire({
-      icon: 'success',
-      title: '新增班级成功',
-      text: `班级「${dialogForm.name}」已被添加。`
-    })
   } else {
-    // 修改
     request.put('class', {
       id: dialogForm.id,
       name: dialogForm.name,
@@ -216,55 +190,34 @@ const handleDialogSubmit = () => {
       startTime: dialogForm.startTime,
       endTime: dialogForm.endTime,
       classLeader: dialogForm.classLeader,
-    }).then((res) => {
-      console.log(res, 'res');
+    }).then(() => {
+      ElMessage.success(`班级「${dialogForm.name}」已更新`)
       fetchData()
     })
-    // const index = tableData.value.findIndex(item => item.name === dialogForm.name)
-    // if (index !== -1) {
-    //   tableData.value[index] = { ...dialogForm }
-    // }
   }
   dialogVisible.value = false
 }
 
 const onDelete = (row: TableData) => {
-  Swal.fire({
-    title: `确认删除班级「${row.name}」吗？`,
-    text: "删除后将无法恢复！",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: '确定',
-    cancelButtonText: '取消'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      // 调用删除接口
-      request.delete(`/class/delete/${row.id}`).then((res) => {
-        console.log(res, 'res');
-        fetchData(); // 刷新数据
-        Swal.fire(
-          '删除成功！',
-          `班级「${row.name}」已被删除。`,
-          'success'
-        );
-      }).catch((err) => {
-        console.error(err);
-        Swal.fire(
-          '班级里有学员,删除失败',
-          '请稍后重试。',
-          'error'
-        );
-      });
-    } else {
-      Swal.fire(
-        '已取消',
-        '班级未被删除。',
-        'info'
-      );
+  ElMessageBox.confirm(
+    `确认删除班级「${row.name}」吗？`,
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
     }
-  });
-};
-
+  )
+    .then(() => {
+      request.delete(`/class/delete/${row.id}`).then(() => {
+        ElMessage.success(`班级「${row.name}」已被删除`)
+        fetchData()
+      }).catch(() => {
+        ElMessage.error('班级里有学员，删除失败')
+      })
+    })
+    .catch(() => {
+      ElMessage.info('班级未被删除')
+    })
+}
 </script>
