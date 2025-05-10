@@ -22,7 +22,9 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import Swal from 'sweetalert2'
+// import Swal from 'sweetalert2'
+import Noty from 'noty'
+import 'noty/lib/noty.css'
 const router = useRouter()
 const form = reactive({
   username: '',
@@ -34,13 +36,14 @@ import request from '@/utils/request.ts'
 
 const handleLogin = () => {
   if (!form.username || !form.password) {
-    Swal.fire({
-      icon: 'error',
-      title: '用户名或密码不能为空',
-      showConfirmButton: false,
-      timer: 1500
-    })
-    return
+    new Noty({
+      type: 'error',
+      layout: 'center',
+      modal: true,
+      timeout: 1500, // 显示 1.5 秒后自动关闭
+      text: '用户名或密码不能为空'
+    }).show();
+    return;
   }
 
   request.post('/login', {
@@ -49,22 +52,22 @@ const handleLogin = () => {
   }).then((res) => {
     console.log(res, 'res');
     if (res.code === 1) {
-      localStorage.setItem('token', res.data)
+      localStorage.setItem('token', res.data);
       console.log('登录成功');
-      router.push('class')
-      Swal.fire({
-        icon: 'success',
-        title: '登录成功',
-        showConfirmButton: false,
-        timer: 1500
-      })
+      router.push('class');
+      new Noty({
+        type: 'success',
+        layout: 'center',
+        modal: true,
+        timeout: 1500, // 显示 1.5 秒后自动关闭
+        text: '登录成功'
+      }).show();
     }
   }).catch(err => {
     console.log(err, 'err');
+  });
+};
 
-  })
-
-}
 
 
 </script>

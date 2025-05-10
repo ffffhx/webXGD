@@ -98,6 +98,8 @@ import type { UploadProps } from 'element-plus'
 import request from '@/utils/request'
 import Swal from 'sweetalert2'
 import BasePage from '@/components/layout/BasePage.vue'
+import Noty from 'noty'
+import 'noty/lib/noty.css'
 const form = reactive({
   name: '',
   gender: '',
@@ -158,16 +160,17 @@ const handleSelectionChange = (val: any[]) => {
 }
 
 const batchDelete = () => {
-  Swal.fire({
-    title: '确认删除选中的员工？',
-    text: '删除后将无法恢复！',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: '确定',
-    cancelButtonText: '取消'
-  }).then((result) => {
+  // Swal.fire({
+  //   title: '确认删除选中的员工？',
+  //   text: '删除后将无法恢复！',
+  //   icon: 'warning',
+  //   showCancelButton: true,
+  //   confirmButtonColor: '#3085d6',
+  //   cancelButtonColor: '#d33',
+  //   confirmButtonText: '确定',
+  //   cancelButtonText: '取消'
+  // })
+  alert ('确认删除选中的员工？').then((result) => {
     if (result.isConfirmed) {
       // 获取选中员工的 ID 列表
       const filtered = multipleSelection.value.map((item) => item.id);
@@ -177,25 +180,64 @@ const batchDelete = () => {
         console.log(res, 'res');
         // 删除成功后刷新数据
         fetchData();
-        Swal.fire(
-          '删除成功！',
-          '选中的员工已被删除。',
-          'success'
-        );
+        // Swal.fire(
+        //   '删除成功！',
+        //   '选中的员工已被删除。',
+        //   'success'
+        // );
+       new Noty({
+          type: 'success',
+          layout: 'center',
+          modal: true,
+          timeout: 3000, // 显示 3 秒后自动关闭
+          text: '删除成功：选中的员工已被删除',
+          closeWith: ['button'], // 只能点击按钮关闭
+          buttons: [
+            Noty.button('确定', 'btn btn-primary', () => {
+              // 关闭提示
+            })
+          ]
+        }).show();
       }).catch((err) => {
         console.error(err);
-        Swal.fire(
-          '删除失败！',
-          '请稍后重试。',
-          'error'
-        );
+        // Swal.fire(
+        //   '删除失败！',
+        //   '请稍后重试。',
+        //   'error'
+        // );
+        new Noty({
+          type: 'error',
+          layout: 'center',
+          modal: true,
+          timeout: 3000, // 显示 3 秒后自动关闭
+          text: '删除失败：请稍后重试',
+          closeWith: ['button'], // 只能点击按钮关闭
+          buttons: [
+            Noty.button('确定', 'btn btn-primary', () => {
+              // 关闭提示
+            })
+          ]
+        }).show();
       });
     } else {
-      Swal.fire(
-        '已取消',
-        '选中的员工未被删除。',
-        'info'
-      );
+      // Swal.fire(
+      //   '已取消',
+      //   '选中的员工未被删除。',
+      //   'info'
+      // );
+      new Noty({
+        type: 'info',
+        layout: 'center',
+        modal: true,
+        timeout: 3000, // 显示 3 秒后自动关闭
+        text: '已取消：选中的员工未被删除',
+        closeWith: ['button'], // 只能点击按钮关闭
+        buttons: [
+          Noty.button('确定', 'btn btn-primary', () => {
+            // 关闭提示
+          })
+        ]
+      }).show();
     }
   });
 };
@@ -290,83 +332,159 @@ const handleSubmit = () => {
         // if (idx !== -1) tableData.value[idx] = { ...dialogForm, updateTime: new Date().toLocaleString() }
       }
       dialogVisible.value = false
-      Swal.fire({
-        title: '操作成功',
-        text: '员工信息已保存',
-        icon: 'success',
-        confirmButtonText: '确定'
-      })
+      // Swal.fire({
+      //   title: '操作成功',
+      //   text: '员工信息已保存',
+      //   icon: 'success',
+      //   confirmButtonText: '确定'
+      // })
+     new Noty({
+        type: 'success',
+        layout: 'center',
+        modal: true,
+        timeout: 1000, // 显示 1 秒后自动关闭
+        text: '操作成功：员工信息已保存',
+        closeWith: [ 'click'], // 点击按钮或者外部区域关闭
+      }).show();
     }
   })
 }
 
-const onDelete = (row: any) => {
-  Swal.fire({
-    title: `确认删除员工「${row.name}」吗？`,
-    text: "删除后将无法恢复！",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: '确定',
-    cancelButtonText: '取消'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      request.delete(`/emps/${row.id}`).then((res) => {
-        console.log(res, 'res');
-        fetchData()
-      }).catch(err => {
-        console.log(err, 'err');
+// const onDelete = (row: any) => {
+//   Swal.fire({
+//     title: `确认删除员工「${row.name}」吗？`,
+//     text: "删除后将无法恢复！",
+//     icon: 'warning',
+//     showCancelButton: true,
+//     confirmButtonColor: '#3085d6',
+//     cancelButtonColor: '#d33',
+//     confirmButtonText: '确定',
+//     cancelButtonText: '取消'
+//   })
+//   .then((result) => {
+//     if (result.isConfirmed) {
+//       request.delete(`/emps/${row.id}`).then((res) => {
+//         console.log(res, 'res');
+//         fetchData()
+//       }).catch(err => {
+//         console.log(err, 'err');
+//       })
+//       tableData.value = tableData.value.filter(item => item !== row)
+//       Swal.fire(
+//         '删除成功！',
+//         `员工「${row.name}」已被删除。`,
+//         'success'
+//       )
+//     } else {
+//       Swal.fire(
+//         '已取消',
+//         '员工未被删除。',
+//         'info'
+//       )
+//     }
+//   })
+// }
+const onDelete = (row) => {
+  const notyConfirm = new Noty({
+    type: 'warning',
+    layout: 'center',
+    modal: true,
+    text: `确认删除员工「${row.name}」吗？删除后将无法恢复！`,
+    closeWith: ['button', 'click'],
+    buttons: [
+      Noty.button('确定', 'btn btn-primary', () => {
+        request.delete(`/emps/${row.id}`).then((res) => {
+          console.log(res, 'res');
+          fetchData();
+        }).catch(err => {
+          console.log(err, 'err');
+          new Noty({
+            type: 'error',
+            layout: 'center',
+            modal: true,
+            timeout: 1000, // 显示 1 秒后自动关闭
+            closeWith: ['button', 'click'],
+            text: '删除失败，请重试。'
+          }).show();
+        });
+        tableData.value = tableData.value.filter(item => item !== row);
+        new Noty({
+          type: 'success',
+          layout: 'center',
+          modal: true,
+          timeout: 1000, // 显示 1 秒后自动关闭
+          text: `删除成功！员工「${row.name}」已被删除。`
+        }).show();
+        notyConfirm.close();
+      }),
+      Noty.button('取消', 'btn btn-danger', () => {
+        new Noty({
+          type: 'info',
+          layout: 'center',
+          modal: true,
+          timeout: 1000, // 显示 1 秒后自动关闭
+          closeWith: ['button', 'click'],
+          text: '已取消：员工未被删除。'
+        }).show();
+        notyConfirm.close();
       })
-      tableData.value = tableData.value.filter(item => item !== row)
-      Swal.fire(
-        '删除成功！',
-        `员工「${row.name}」已被删除。`,
-        'success'
-      )
-    } else {
-      Swal.fire(
-        '已取消',
-        '员工未被删除。',
-        'info'
-      )
-    }
-  })
-}
+    ]
+  }).show();
+};
+
 
 // 上传图片逻辑
 const handleAvatarSuccess: UploadProps['onSuccess'] = (response, file) => {
   console.log('handleAvatarSuccess');
 }
 
-const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
+const beforeAvatarUpload = (rawFile) => {
   console.log(rawFile.type, 'rawFile.type');
 
-  const isJpgOrPng = rawFile.type === 'image/jpeg' || rawFile.type === 'image/png' || rawFile.type === 'image/jpg'
-  const isLt2M = rawFile.size / 1024 / 1024 < 2
+  const isJpgOrPng = rawFile.type === 'image/jpeg' || rawFile.type === 'image/png' || rawFile.type === 'image/jpg';
+  const isLt2M = rawFile.size / 1024 / 1024 < 2;
 
   if (!isJpgOrPng) {
-    Swal.fire({
-      icon: 'error',
-      title: '格式错误',
-      text: '只能上传 JPG/PNG 格式的图片'
-    })
-    document.querySelector('.swal2-container')!.style.zIndex = '9999'
-    return false
+    const noty = new Noty({
+      type: 'error',
+      layout: 'center',
+      modal: true,
+      timeout: 1000, // 显示 1 秒后自动关闭
+      text: '格式错误：只能上传 JPG/PNG 格式的图片',
+      closeWith: ['button', 'click'],
+      buttons: [
+        Noty.button('确定', 'btn btn-primary', () => {
+          // 关闭提示
+          noty.close();
+        })
+      ]
+    }).show();
+    return false;
   }
   if (!isLt2M) {
-    Swal.fire({
-      icon: 'error',
-      title: '大小错误',
-      text: '图片大小不能超过 2MB'
-    })
-    return false
+    new Noty({
+      type: 'error',
+      layout: 'center',
+      modal: true,
+      // timeout: 1000, // 显示 1 秒后自动关闭
+      text: '大小错误：图片大小不能超过 2MB',
+      closeWith: ['button', 'click'], // 点击按钮或者外部区域关闭
+      // buttons: [
+      //   Noty.button('确定', 'btn btn-primary', () => {
+      //     // 关闭提示
+      //     noty.close();
+      //   })
+      // ]
+    }).show();
+    return false;
   }
   console.log('图片符合要求');
-  uploadAvatar(rawFile)
+  uploadAvatar(rawFile);
 
-  return true
-}
+  return true;
+};
+
+
 </script>
 
 <style scoped>
