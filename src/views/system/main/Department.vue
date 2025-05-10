@@ -105,8 +105,16 @@ const handleDialogSubmit = () => {
 
   if (dialogTitle.value === '新增部门') {
     request.post('/depts', {
-      name: dialogForm.name
+      name: dialogForm.name.trim(),
     }).then((res) => {
+      if(res.msg === '部门已存在') {
+        Swal.fire({
+          icon: 'error',
+          title: '部门已存在',
+          text: '请检查部门名称是否重复！'
+        })
+        return
+      }
       console.log(res, 'res');
       fetchData()
     })

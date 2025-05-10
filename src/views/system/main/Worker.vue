@@ -79,9 +79,9 @@
         <el-form-item label="入职日期">
           <el-date-picker v-model="dialogForm.createTime" type="date" />
         </el-form-item>
-        <el-form-item label="归属部门">
+        <!-- <el-form-item label="归属部门">
           <el-input v-model="dialogForm.deptId" />
-        </el-form-item>
+        </el-form-item> -->
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -148,7 +148,16 @@ const uploadAvatar = (rawFile: File) => {
 onMounted(fetchData)
 
 const onSearch = () => {
-
+  // if (form.createTime[0] && form.createTime[1]) {
+  //   if (form.createTime[0] > form.createTime[1]) {
+  //     Swal.fire({
+  //       icon: 'warning',
+  //       title: '开始时间不能大于结束时间',
+  //       text: '请重新选择日期范围'
+  //     })
+  //     return
+  //   }
+  // }
   fetchData()
 
 }
@@ -213,7 +222,7 @@ const dialogForm = reactive<any>({
   image: '',
   job: '',
   createTime: '',
-  deptId: ''
+  // deptId: ''
 })
 
 const rules = {
@@ -238,7 +247,7 @@ const openDialog = (type: 'add' | 'edit', row?: any) => {
       job: '',
       createTime: '',
       updateTime: '',
-      deptId: ''
+      // deptId: ''
     })
   }
   dialogVisible.value = true
@@ -258,7 +267,7 @@ const handleSubmit = () => {
           image: dialogForm.image,
           job: dialogForm.job,
           entrydate: dialogForm.entrydate,
-          deptId: dialogForm.deptId,
+          // deptId: dialogForm.deptId,
           createTime: dialogForm.createTime,
           updateTime: dialogForm.updateTime,
         }).then((res) => {
@@ -280,7 +289,7 @@ const handleSubmit = () => {
           job: dialogForm.job,
           createTime: dialogForm.createTime,
           updateTime: dialogForm.updateTime,
-          deptId: dialogForm.deptId
+          // deptId: dialogForm.deptId
         }).then((res) => {
           fetchData()
           console.log(res, 'res');

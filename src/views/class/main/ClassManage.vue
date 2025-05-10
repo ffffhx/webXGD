@@ -73,7 +73,7 @@
 
 <script lang="ts" setup>
 import { reactive, ref, onMounted } from 'vue'
-import { ElMessageBox, ElMessage } from 'element-plus'
+import {  ElMessage } from 'element-plus'
 import BasePage from '@/components/layout/BasePage.vue'
 import request from '@/utils/request'
 import Swal from 'sweetalert2'
@@ -98,6 +98,15 @@ const total = ref(0)
 const tableData = ref<TableData[]>([])
 
 const onSubmit = () => {
+  if(form.dateRange[0] && form.dateRange[1]) {
+    if (form.dateRange[0] > form.dateRange[1]) {
+      ElMessage({
+        message: '开始时间不能大于结束时间',
+        type: 'warning'
+      })
+      return
+    }
+  }
   page.value = 1
   fetchData()
 }
@@ -179,7 +188,15 @@ const handleDialogSubmit = () => {
       endTime: dialogForm.endTime,
       classLeader: dialogForm.classLeader
     }).then(res => {
-      console.log(res);
+      console.log(res,'新增班级的res');
+      if (res.code === 0) {
+        Swal.fire({
+          icon: 'error',
+          title: '新增班级失败',
+          text: '班主任不在员工列表内部'
+        })
+        return
+      }
       fetchData()
     }).catch(err => {
       console.log(err);
