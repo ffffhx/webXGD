@@ -12,8 +12,8 @@ app.mount('#app')
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    document.title = '我从你的拥抱中来' // 用户切换到其他 Tab 时的标题
+    document.title = '万幸得以相逢' // 用户切换到其他 Tab 时的标题
   } else {
-    document.title = '万幸得以相逢' // 用户回到当前 Tab 时的标题
+    document.title = '信息管理系统' // 用户回到当前 Tab 时的标题
   }
 })
