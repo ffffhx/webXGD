@@ -2,8 +2,8 @@
   <el-header class="layout-top">
     <div class="top-left">信息管理系统</div>
     <div class="top-right">
-      <el-button type="" @click="handleChangePassword">修改密码</el-button>
-      <el-button type="info" plain @click="handleLogout">退出登录</el-button>
+      <el-button type="info" plain @click="handleChangePassword">修改密码</el-button>
+      <el-button type="warning" plain @click="handleLogout">退出登录</el-button>
     </div>
   </el-header>
 </template>

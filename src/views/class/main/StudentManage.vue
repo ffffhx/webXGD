@@ -116,7 +116,9 @@ import { ElMessageBox, ElMessage } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import request from '@/utils/request'
 import BasePage from '@/components/layout/BasePage.vue'
-import Swal from 'sweetalert2'
+// import Swal from 'sweetalert2'
+import Noty from 'noty'
+import 'noty/lib/noty.css'
 
 interface Student {
   id: number
@@ -303,53 +305,60 @@ const submitForm = () => {
 
         })
       }
-      Swal.fire({
-        icon: 'success',
-        title: '操作成功',
-
-      })
+      new Noty({
+        type: 'success',
+        layout: 'center',
+        modal: true,
+        timeout: 1000, // 显示 1 秒后自动关闭
+        text: '操作成功'
+      }).show();
     }
   })
 }
 
-const handleDelete = (row: Student) => {
-  Swal.fire({
-    title: `确定删除学员「${row.name}」吗？`,
-    text: '删除后将无法恢复！',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: '确定',
-    cancelButtonText: '取消'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      // 调用删除接口
-      request.delete(`/student/delete/${row.id}`).then((res) => {
-        console.log(res);
-        // 刷新数据
-        fetchData();
-        Swal.fire(
-          '删除成功！',
-          `学员「${row.name}」已被删除。`,
-          'success'
-        );
-      }).catch((err) => {
-        console.error(err);
-        Swal.fire(
-          '删除失败！',
-          '请稍后重试。',
-          'error'
-        );
-      });
-    } else {
-      Swal.fire(
-        '已取消',
-        '学员未被删除。',
-        'info'
-      );
-    }
-  });
+const handleDelete = (row) => {
+  const notyConfirm = new Noty({
+    type: 'warning',
+    layout: 'center',
+    modal: true,
+    text: `确定删除学员「${row.name}」吗？删除后将无法恢复！`,
+    closeWith: ['button', 'click'],
+    buttons: [
+      Noty.button('确定', 'btn btn-primary', () => {
+        request.delete(`/student/delete/${row.id}`).then((res) => {
+          console.log(res);
+          fetchData();
+          new Noty({
+            type: 'success',
+            layout: 'center',
+            modal: true,
+            timeout: 1000, // 显示 1 秒后自动关闭
+            text: `删除成功！学员「${row.name}」已被删除。`
+          }).show();
+        }).catch((err) => {
+          console.error(err);
+          new Noty({
+            type: 'error',
+            layout: 'center',
+            modal: true,
+            timeout: 1000, // 显示 1 秒后自动关闭
+            text: '删除失败！请稍后重试。'
+          }).show();
+        });
+        notyConfirm.close();
+      }),
+      Noty.button('取消', 'btn btn-danger', () => {
+        new Noty({
+          type: 'info',
+          layout: 'center',
+          modal: true,
+          timeout: 1000, // 显示 1 秒后自动关闭
+          text: '已取消：学员未被删除。'
+        }).show();
+        notyConfirm.close();
+      })
+    ]
+  }).show();
 };
 
 const disciplineDialogVisible = ref(false)
@@ -366,9 +375,9 @@ const confirmDiscipline = () => {
   if (currentStudent.value) {
     console.log(currentStudent.value, 'currentStudent.value');
 
-    currentStudent.value.violationCount += 1
-    currentStudent.value.violationScore += violationScoreInput.value
-    currentStudent.value.lastOperateTime = new Date().toLocaleString()
+    currentStudent.value.violationCount += 1;
+    currentStudent.value.violationScore += violationScoreInput.value;
+    currentStudent.value.lastOperateTime = new Date().toLocaleString();
     request.put('/student/violation', null, {
       params: {
         id: 2,
@@ -376,15 +385,18 @@ const confirmDiscipline = () => {
       }
     }).then((res) => {
       console.log(res, 'res');
-    })
-    Swal.fire({
-      icon: 'success',
-      title: '违纪处理成功',
+    });
+    new Noty({
+      type: 'success',
+      layout: 'center',
+      modal: true,
+      timeout: 1000, // 显示 1 秒后自动关闭
       text: `学员「${currentStudent.value.name}」的违纪扣分已更新。`
-    })
-    disciplineDialogVisible.value = false
+    }).show();
+    disciplineDialogVisible.value = false;
   }
-}
+};
+
 </script>
 
 <style scoped>

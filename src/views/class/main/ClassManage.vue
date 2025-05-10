@@ -76,7 +76,9 @@ import { reactive, ref, onMounted } from 'vue'
 import {  ElMessage } from 'element-plus'
 import BasePage from '@/components/layout/BasePage.vue'
 import request from '@/utils/request'
-import Swal from 'sweetalert2'
+// import Swal from 'sweetalert2'
+import Noty from 'noty'
+import 'noty/lib/noty.css'
 
 interface TableData {
   id?: number
@@ -180,7 +182,6 @@ const openDialog = (type: 'add' | 'edit', row?: TableData) => {
 const handleDialogSubmit = () => {
   // 新增
   if (dialogTitle.value === '新增班级') {
-    // tableData.value.unshift({ ...dialogForm })
     request.post('class/add', {
       name: dialogForm.name,
       classRoom: dialogForm.classRoom,
@@ -200,13 +201,14 @@ const handleDialogSubmit = () => {
       fetchData()
     }).catch(err => {
       console.log(err);
-
     });
-    Swal.fire({
-      icon: 'success',
-      title: '新增班级成功',
-      text: `班级「${dialogForm.name}」已被添加。`
-    })
+    new Noty({
+      type: 'success',
+      layout: 'center',
+      modal: true,
+      timeout: 1000, // 显示 1 秒后自动关闭
+      text: `新增班级成功：班级「${dialogForm.name}」已被添加。`
+    }).show();
   } else {
     // 修改
     request.put('class', {
@@ -218,53 +220,65 @@ const handleDialogSubmit = () => {
       classLeader: dialogForm.classLeader,
     }).then((res) => {
       console.log(res, 'res');
-      fetchData()
-    })
-    // const index = tableData.value.findIndex(item => item.name === dialogForm.name)
-    // if (index !== -1) {
-    //   tableData.value[index] = { ...dialogForm }
-    // }
+      new Noty({
+        type: 'success',
+        layout: 'center',
+        modal: true,
+        timeout: 1000, // 显示 1 秒后自动关闭
+        text: `编辑班级成功：班级「${dialogForm.name}」已被修改。`
+      }).show();
+      // 刷新数据
+      fetchData();
+    });
   }
-  dialogVisible.value = false
-}
-
-const onDelete = (row: TableData) => {
-  Swal.fire({
-    title: `确认删除班级「${row.name}」吗？`,
-    text: "删除后将无法恢复！",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: '确定',
-    cancelButtonText: '取消'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      // 调用删除接口
-      request.delete(`/class/delete/${row.id}`).then((res) => {
-        console.log(res, 'res');
-        fetchData(); // 刷新数据
-        Swal.fire(
-          '删除成功！',
-          `班级「${row.name}」已被删除。`,
-          'success'
-        );
-      }).catch((err) => {
-        console.error(err);
-        Swal.fire(
-          '班级里有学员,删除失败',
-          '请稍后重试。',
-          'error'
-        );
-      });
-    } else {
-      Swal.fire(
-        '已取消',
-        '班级未被删除。',
-        'info'
-      );
-    }
-  });
+  dialogVisible.value = false;
 };
+
+
+const onDelete = (row) => {
+  const notyConfirm = new Noty({
+    type: 'warning',
+    layout: 'center',
+    modal: true,
+    text: `确认删除班级「${row.name}」吗？删除后将无法恢复！`,
+    closeWith: ['button', 'click'],
+    buttons: [
+      Noty.button('确定', 'btn btn-primary', () => {
+        request.delete(`/class/delete/${row.id}`).then((res) => {
+          console.log(res, 'res');
+          fetchData(); // 刷新数据
+          new Noty({
+            type: 'success',
+            layout: 'center',
+            modal: true,
+            timeout: 1000, // 显示 1 秒后自动关闭
+            text: `删除成功！班级「${row.name}」已被删除。`
+          }).show();
+        }).catch((err) => {
+          console.error(err);
+          new Noty({
+            type: 'error',
+            layout: 'center',
+            modal: true,
+            timeout: 1000, // 显示 1 秒后自动关闭
+            text: '班级里有学员,删除失败。请稍后重试。'
+          }).show();
+        });
+        notyConfirm.close();
+      }),
+      Noty.button('取消', 'btn btn-danger', () => {
+        new Noty({
+          type: 'info',
+          layout: 'center',
+          modal: true,
+          timeout: 1000, // 显示 1 秒后自动关闭
+          text: '已取消：班级未被删除。'
+        }).show();
+        notyConfirm.close();
+      })
+    ]
+  }).show();
+};
+
 
 </script>

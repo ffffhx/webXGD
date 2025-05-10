@@ -11,8 +11,8 @@
         <el-table-column prop="updateTime" label="最后操作时间" />
         <el-table-column label="操作" fixed="right" width="180">
           <template #default="scope">
-            <el-button size="small" type="primary" text @click="openDialog('edit', scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" text @click="onDelete(scope.row)">删除</el-button>
+            <el-button size="small" type="primary" link @click="openDialog('edit', scope.row)">编辑</el-button>
+            <el-button size="small" type="danger" link @click="onDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -39,8 +39,10 @@ import { reactive, ref, onMounted } from 'vue'
 //   ElMessage
 // } from 'element-plus'
 import BasePage from '@/components/layout/BasePage.vue'
-import Swal from 'sweetalert2'
+// import Swal from 'sweetalert2'
 import request from '@/utils/request'
+import Noty from 'noty'
+import 'noty/lib/noty.css'
 
 
 // 表格数据结构
@@ -91,16 +93,18 @@ const openDialog = (type: 'add' | 'edit', row?: Department) => {
   dialogVisible.value = true
 }
 
-// 提交新增/编辑表单
+
 const handleDialogSubmit = () => {
-  const now = new Date().toLocaleString()
+  const now = new Date().toLocaleString();
   if (!dialogForm.name.trim()) {
-    Swal.fire({
-      icon: 'warning',
-      title: '部门名称不能为空',
-      text: '请输入部门名称！'
-    })
-    return
+    new Noty({
+      type: 'warning',
+      layout: 'center',
+      modal: true,
+      timeout: 1000, // 显示 1 秒后自动关闭
+      text: '部门名称不能为空，请输入部门名称！'
+    }).show();
+    return;
   }
 
   if (dialogTitle.value === '新增部门') {
@@ -116,8 +120,8 @@ const handleDialogSubmit = () => {
         return
       }
       console.log(res, 'res');
-      fetchData()
-    })
+      fetchData();
+    });
     // tableData.value.unshift({ name: dialogForm.name, updateTime: now })
     // 编辑部门
   } else {
@@ -131,94 +135,74 @@ const handleDialogSubmit = () => {
       name: dialogForm.name
     }).then((res) => {
       console.log(res, 'res');
-      fetchData()
-
-    })
+      fetchData();
+    });
   }
 
-  dialogVisible.value = false
-  Swal.fire({
-    icon: 'success',
-    title: '提交成功',
-    text: '部门信息已更新！'
-  })
-}
+  dialogVisible.value = false;
+  new Noty({
+    type: 'success',
+    layout: 'center',
+    modal: true,
+    timeout: 1000, // 显示 1 秒后自动关闭
+    text: '提交成功，部门信息已更新！'
+  }).show();
+};
 
-// Swal.fire({
-//   title: `确定删除部门「${row.name}」吗？`,
-//   text: "删除后将无法恢复！",
-//   icon: 'warning',
-//   showCancelButton: true,
-//   confirmButtonColor: '#3085d6',
-//   cancelButtonColor: '#d33',
-//   confirmButtonText: '确定',
-//   cancelButtonText: '取消'
-// }).then((result) => {
-//   if (result.isConfirmed) {
-//     tableData.value = tableData.value.filter(item => item !== row)
-//     Swal.fire(
-//       '删除成功！',
-//       `部门「${row.name}」已被删除。`,
-//       'success'
-//     )
-//   } else {
-//     Swal.fire(
-//       '已取消',
-//       '部门未被删除。',
-//       'info'
-//     )
-//   }
+const onDelete = (row) => {
+  const notyConfirm = new Noty({
+    type: 'warning',
+    layout: 'center',
+    modal: true,
+    text: `确定删除部门「${row.name}」吗？删除后将无法恢复！`,
+    closeWith: ['button', 'click'],
+    buttons: [
+      Noty.button('确定', 'btn btn-primary', () => {
+        request.delete(`/depts/${row.id}`).then((res) => {
+          console.log(res);
+          // 从 tableData 中移除已删除的项
+          tableData.value = tableData.value.filter(item => item.id !== row.id);
+          new Noty({
+            type: 'success',
+            layout: 'center',
+            modal: true,
+            timeout: 1000, // 显示 1 秒后自动关闭
+            text: `删除成功！部门「${row.name}」已被删除。`
+          }).show();
+        }).catch((err) => {
+          console.error(err);
+          new Noty({
+            type: 'error',
+            layout: 'center',
+            modal: true,
+            timeout: 1000, // 显示 1 秒后自动关闭
+            text: '删除失败！请稍后重试。'
+          }).show();
+        });
+        notyConfirm.close();
+      }),
+      Noty.button('取消', 'btn btn-danger', () => {
+        new Noty({
+          type: 'info',
+          layout: 'center',
+          modal: true,
+          timeout: 1000, // 显示 1 秒后自动关闭
+          text: '已取消：部门未被删除。'
+        }).show();
+        notyConfirm.close();
+      })
+    ]
+  }).show();
+};
 
-// 删除操作
-const onDelete = (row: Department) => {
-
-  Swal.fire({
-    title: `确定删除部门「${row.name}」吗？`,
-    text: "删除后将无法恢复！",
-    icon: 'warning',
-    showCancelButton: true,
-    heightAuto: false,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: '确定',
-    cancelButtonText: '取消'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      // 调用删除接口
-      request.delete(`/depts/${row.id}`).then((res) => {
-        console.log(res);
-        // 从 tableData 中移除已删除的项
-        tableData.value = tableData.value.filter(item => item.id !== row.id);
-        Swal.fire(
-          '删除成功！',
-          `部门「${row.name}」已被删除。`,
-          'success'
-        );
-      }).catch((err) => {
-        console.error(err);
-        Swal.fire(
-          '删除失败！',
-          '请稍后重试。',
-          'error'
-        );
-      });
-    } else {
-      Swal.fire(
-        '已取消',
-        '部门未被删除。',
-        'info'
-      );
-    }
-  });
-}
 
 onMounted(fetchData)
 </script>
 
 
 <style scoped>
-body.swal2-height-auto {
+/* body.swal2-height-auto {
   height: auto !important;
   overflow: auto !important;
-}
+} */
 </style>
